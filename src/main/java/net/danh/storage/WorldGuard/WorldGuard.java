@@ -20,7 +20,16 @@ public class WorldGuard {
         Plugin worldGuard = Bukkit.getServer().getPluginManager().getPlugin("WorldGuard");
         if (worldGuard != null) {
             WorldGuardWrapper wrapper = WorldGuardWrapper.getInstance();
-            Optional<IWrappedFlag<WrappedState>> miningFlag = wrapper.registerFlag("storage", WrappedState.class, WrappedState.ALLOW);
+            Optional<IWrappedFlag<WrappedState>> miningFlag;
+            try {
+                miningFlag = wrapper.registerFlag("storage", WrappedState.class, WrappedState.ALLOW);
+            } catch (IllegalStateException e) {
+                // WorldGuard only accepts new flags while it loads (e.g. not after a PlugMan hot-load): reuse the flag if it already exists.
+                miningFlag = wrapper.getFlag("storage", WrappedState.class);
+                if (miningFlag.isEmpty()) {
+                    plugin.getLogger().warning("Cannot register WorldGuard flag 'storage' now; restart the server to enable it.");
+                }
+            }
             miningFlag.ifPresent(wrappedStateIWrappedFlag -> {
                 plugin.getLogger().log(Level.INFO, "Registered flag " + wrappedStateIWrappedFlag.getName());
                 registered = true;

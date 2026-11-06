@@ -34,7 +34,7 @@ public class MySQL extends Database {
     public Connection getSQLConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
-                return connection;
+                return nonClosing(connection);
             }
 
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -43,7 +43,7 @@ public class MySQL extends Database {
                     host, port, database, useSSL);
 
             connection = DriverManager.getConnection(url, username, password);
-            return connection;
+            return nonClosing(connection);
 
         } catch (SQLException ex) {
             Storage.getStorage().getLogger().log(Level.SEVERE, "MySQL connection failed", ex);

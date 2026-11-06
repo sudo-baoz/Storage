@@ -38,7 +38,7 @@ public class SQLite extends Database {
         }
         try {
             if (connection != null && !connection.isClosed()) {
-                return connection;
+                return nonClosing(connection);
             }
             Class.forName("org.sqlite.JDBC");
 
@@ -53,7 +53,7 @@ public class SQLite extends Database {
                 statement.execute("PRAGMA temp_store=MEMORY");
                 statement.execute("PRAGMA cache_size=-20000");
             }
-            return connection;
+            return nonClosing(connection);
         } catch (SQLException ex) {
             Storage.getStorage().getLogger().log(Level.SEVERE, "SQLite exception on initialize", ex);
         } catch (ClassNotFoundException ex) {

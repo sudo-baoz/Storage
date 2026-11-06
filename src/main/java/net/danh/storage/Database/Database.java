@@ -21,6 +21,25 @@ public abstract class Database {
 
     public abstract Connection getSQLConnection();
 
+    /**
+     * Many callers close the connection they get; on the one shared connection that kills other callers' statements
+     * ("stmt pointer is closed"). The proxy makes close() a no-op.
+     */
+    protected static Connection nonClosing(Connection raw) {
+        return (Connection) java.lang.reflect.Proxy.newProxyInstance(
+                Connection.class.getClassLoader(), new Class<?>[]{Connection.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("close")) {
+                        return null;
+                    }
+                    try {
+                        return method.invoke(raw, args);
+                    } catch (java.lang.reflect.InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                });
+    }
+
     public abstract void load();
 
     public void initialize() {
