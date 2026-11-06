@@ -74,7 +74,7 @@ public class StorageManagerImpl implements IStorageManager {
     @NotNull
     @Override
     public Set<String> getStoredMaterials(@NotNull Player player) {
-        String prefix = player.getName() + "_";
+        String prefix = MineManager.storageKey(player) + "_";
         return MineManager.playerdata.entrySet().stream()
                 .filter(e -> e.getKey().startsWith(prefix) && e.getValue() > 0)
                 .map(e -> e.getKey().substring(prefix.length()))

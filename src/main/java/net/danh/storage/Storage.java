@@ -346,6 +346,15 @@ public final class Storage extends JavaPlugin {
         }
     }
 
+    /**
+     * Hooks SuperiorSkyblock2 (shared island storage). Safe to call repeatedly and before the plugin is enabled.
+     */
+    public static void setupIslandStorage() {
+        if (storage != null && Bukkit.getPluginManager().isPluginEnabled("SuperiorSkyblock2")) {
+            net.danh.storage.Manager.Island.SuperiorSkyblockHook.attach(storage);
+        }
+    }
+
     public void applyDebugVanillaStorageConfigIfEnabled() {
         if (!DEBUG_STORAGE_AUTO_ADD_ALL_VANILLA) {
             return;
@@ -447,6 +456,8 @@ public final class Storage extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("LuckPerms") != null) {
             LuckPermsListener.register(this);
         }
+
+        setupIslandStorage();
 
         getLogger().log(Level.INFO, "Loading completed. Have fun!");
         if (new NMSAssistant().isVersionLessThanOrEqualTo(12)) {

@@ -9,3 +9,5 @@ prompts
 docs
 .bg-shell
 package-lock.json
+/graphify-out
+/.claude

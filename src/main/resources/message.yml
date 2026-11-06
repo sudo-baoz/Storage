@@ -75,6 +75,22 @@ user:
     list_empty: "#prefix# &7No AutoSell items enabled."
     system_disabled: "#prefix# &cAutoSell system is disabled by server configuration."
     cleared: "#prefix# &aCleared &e#count# &aAutoSell items."
+  island:
+    sell_denied: "#prefix# &cThe island owner has not allowed you to sell from the island storage."
+    disabled: "#prefix# &cIsland storage is not active on this server."
+    not_in_island: "#prefix# &cYou are not in an island."
+    not_owner: "#prefix# &cOnly the island owner can manage member permissions."
+    not_member: "#prefix# &e#player# &cis not a member of your island."
+    cannot_target_owner: "#prefix# &cThe island owner can always sell."
+    status_yes: "&a✔"
+    status_no: "&c✘"
+    info_header: "#prefix# &aIsland storage &7(shared with all members) &aowned by &e#owner#"
+    info_you: "#prefix# &7You are the &e#role#&7. Sell: #status#"
+    info_member: "&7 - &e#player# &7| Sell: #status#"
+    sell_allowed: "#prefix# &e#player# &acan now sell from the island storage."
+    sell_revoked: "#prefix# &e#player# &ccan no longer sell from the island storage."
+    role_owner: "owner"
+    role_member: "member"
   action:
     deposit:
       full_storage: "#prefix# &cStorage has been full &8(#item_amount#/#max_storage#)&c, you can't deposit #amount# #material#!"

@@ -39,6 +39,9 @@ public class Sell {
     }
 
     public void doAction() {
+        if (MineManager.denySell(p)) {
+            return;
+        }
         int amount = MineManager.getPlayerBlock(p, getMaterialData());
         if (this.amount > 0) {
             if (amount >= this.amount) {

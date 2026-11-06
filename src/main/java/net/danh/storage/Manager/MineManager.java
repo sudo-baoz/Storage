@@ -5,9 +5,11 @@ import net.danh.storage.API.events.StorageDepositEvent;
 import net.danh.storage.API.events.StorageToggleEvent;
 import net.danh.storage.API.events.StorageWithdrawEvent;
 import net.danh.storage.Database.PlayerData;
+import net.danh.storage.Manager.Island.IslandStorageManager;
 import net.danh.storage.Manager.SpecialMaterial.SpecialMaterialManager;
 import net.danh.storage.NMS.NMSAssistant;
 import net.danh.storage.Storage;
+import net.danh.storage.Utils.ChatUtils;
 import net.danh.storage.Utils.File;
 import net.danh.storage.Utils.MaterialUtils;
 import net.danh.storage.Utils.Number;
@@ -24,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
@@ -68,8 +71,68 @@ public class MineManager {
     private static boolean placedBlocksDirty;
     private static boolean placedBlocksSaveScheduled;
 
+    /**
+     * Storage row each online player loaded: the island owner's name for island members, the own name otherwise.
+     */
+    private static final Map<UUID, String> activeKey = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Name of the storage row the player is using right now (shared island storage or personal storage).
+     */
+    public static @NotNull String storageKey(@NotNull Player p) {
+        return activeKey.getOrDefault(p.getUniqueId(), p.getName());
+    }
+
+    /**
+     * Same lookup for APIs that only know a name: online players use their loaded row, offline players follow
+     * their island if they have one.
+     */
+    private static @NotNull String resolveStorageName(@NotNull String playerName) {
+        Player online = Bukkit.getPlayerExact(playerName);
+        if (online != null) {
+            return storageKey(online);
+        }
+        if (!IslandStorageManager.isEnabled()) {
+            return playerName;
+        }
+        OfflinePlayer offline = Bukkit.getOfflinePlayer(playerName);
+        return IslandStorageManager.resolveKey(offline.getUniqueId(), playerName);
+    }
+
+    private static boolean isKeyInUse(@NotNull String key, @Nullable UUID except) {
+        return activeKey.entrySet().stream()
+                .anyMatch(e -> e.getValue().equals(key) && !e.getKey().equals(except));
+    }
+
+    /**
+     * Re-evaluates which storage the player must use after their island membership changed, saving the old
+     * storage first. Does nothing when the player is not loaded or the storage did not change.
+     */
+    public static void refreshStorageOwner(@NotNull Player p) {
+        String oldKey = activeKey.get(p.getUniqueId());
+        if (oldKey == null || oldKey.equals(IslandStorageManager.resolveKey(p))) {
+            return;
+        }
+        savePlayerData(p);
+        cleanupPlayerData(p);
+        loadPlayerData(p);
+    }
+
+    /**
+     * Sells are limited for island members the owner did not allow. Sends the denial message.
+     *
+     * @return true when the player may NOT sell
+     */
+    public static boolean denySell(@NotNull Player p) {
+        if (IslandStorageManager.canSell(p)) {
+            return false;
+        }
+        p.sendMessage(ChatUtils.colorize(File.getMessage().getString("user.island.sell_denied")));
+        return true;
+    }
+
     public static int getPlayerBlock(@NotNull Player p, String material) {
-        return playerdata.getOrDefault(p.getName() + "_" + material, 0);
+        return playerdata.getOrDefault(storageKey(p) + "_" + material, 0);
     }
 
     public static void loadPlacedBlocks() {
@@ -247,7 +310,7 @@ public class MineManager {
     }
 
     public static boolean hasPlayerBlock(@NotNull Player p, String material) {
-        return playerdata.containsKey(p.getName() + "_" + material);
+        return playerdata.containsKey(storageKey(p) + "_" + material);
     }
 
     public static Integer getMaxStorageOverride(@NotNull Player player) {
@@ -328,11 +391,11 @@ public class MineManager {
 
     public static @NotNull PlayerData getPlayerDatabase(@NotNull Player player) {
 
-        PlayerData playerStats = Storage.db.getData(player.getName());
+        PlayerData playerStats = Storage.db.getData(storageKey(player));
 
         if (playerStats == null) {
             boolean defaultAutoPickup = File.getConfig().getBoolean("settings.default_auto_pickup");
-            playerStats = new PlayerData(player.getName(), createNewData(), File.getConfig().getInt("settings.default_max_storage"), defaultAutoPickup);
+            playerStats = new PlayerData(storageKey(player), createNewData(), File.getConfig().getInt("settings.default_max_storage"), defaultAutoPickup);
             Storage.db.createTable(playerStats);
             toggle.put(player.getUniqueId(), defaultAutoPickup);
         } else {
@@ -377,7 +440,10 @@ public class MineManager {
     public static boolean setItemAutoSell(@NotNull Player player,
                                           @NotNull String material,
                                           boolean enabled) {
-        String playerName = player.getName();
+        if (denySell(player)) {
+            return isAutoSellEnabledForItem(player, material);
+        }
+        String playerName = storageKey(player);
         Set<String> set = autoSellItems.computeIfAbsent(playerName, k -> new HashSet<>());
 
         boolean changed;
@@ -400,7 +466,7 @@ public class MineManager {
     }
 
     public static @NotNull Set<String> getEnabledAutoSellItems(@NotNull Player player) {
-        Set<String> set = autoSellItems.get(player.getName());
+        Set<String> set = autoSellItems.get(storageKey(player));
         if (set == null || set.isEmpty()) {
             return new HashSet<>();
         }
@@ -408,7 +474,7 @@ public class MineManager {
     }
 
     public static int clearAutoSell(@NotNull Player player) {
-        String playerName = player.getName();
+        String playerName = storageKey(player);
         Set<String> current = autoSellItems.remove(playerName);
         int cleared = current == null ? 0 : current.size();
         if (cleared > 0) {
@@ -489,7 +555,7 @@ public class MineManager {
     public static @NotNull String convertOfflineData(Player p) {
         StringBuilder mapAsString = new StringBuilder("{");
         for (String block : getPluginBlocks()) {
-            if (playerdata.containsKey(p.getName() + "_" + block)) {
+            if (playerdata.containsKey(storageKey(p) + "_" + block)) {
                 mapAsString.append(block).append("=").append(getPlayerBlock(p, block)).append(", ");
             } else {
                 mapAsString.append(block).append("=").append(0).append(", ");
@@ -500,7 +566,7 @@ public class MineManager {
         }
         mapAsString.append("}");
 
-        Set<String> disabledItems = disabledAutoPickupItems.get(p.getName());
+        Set<String> disabledItems = disabledAutoPickupItems.get(storageKey(p));
         if (disabledItems != null && !disabledItems.isEmpty()) {
             StringBuilder disabledData = new StringBuilder();
             for (String key : getPluginBlocks()) {
@@ -518,7 +584,7 @@ public class MineManager {
             }
         }
 
-        Set<String> enabledAutoSell = autoSellItems.get(p.getName());
+        Set<String> enabledAutoSell = autoSellItems.get(storageKey(p));
         if (enabledAutoSell != null && !enabledAutoSell.isEmpty()) {
             StringBuilder enabledData = new StringBuilder();
             for (String key : getPluginBlocks()) {
@@ -585,7 +651,7 @@ public class MineManager {
         if (!getToggleStatus(player)) {
             return false;
         }
-        Set<String> disabledItems = disabledAutoPickupItems.get(player.getName());
+        Set<String> disabledItems = disabledAutoPickupItems.get(storageKey(player));
         if (disabledItems == null || disabledItems.isEmpty()) {
             return true;
         }
@@ -594,7 +660,7 @@ public class MineManager {
 
     public static boolean toggleItemAutoPickup(@NotNull Player player,
                                                @NotNull String material) {
-        String playerName = player.getName();
+        String playerName = storageKey(player);
         Set<String> disabledItems = disabledAutoPickupItems.computeIfAbsent(playerName, k -> new HashSet<>());
 
         if (disabledItems.contains(material)) {
@@ -640,7 +706,7 @@ public class MineManager {
     }
 
     public static void setBlock(@NotNull Player p, String material, int amount) {
-        playerdata.put(p.getName() + "_" + material, amount);
+        playerdata.put(storageKey(p) + "_" + material, amount);
     }
 
     public static void setBlock(Player p, @NotNull List<String> list) {
@@ -676,7 +742,7 @@ public class MineManager {
             amountToAdd = Math.min(event.getAmount(), availableSpace);
         }
 
-        playerdata.put(p.getName() + "_" + material, currentAmount + amountToAdd);
+        playerdata.put(storageKey(p) + "_" + material, currentAmount + amountToAdd);
 
         if (fireEvent) {
             StorageHookAPI.callAfterDeposit(p, material, amountToAdd);
@@ -730,7 +796,7 @@ public class MineManager {
             return;
         }
 
-        Set<String> enabled = autoSellItems.get(player.getName());
+        Set<String> enabled = autoSellItems.get(storageKey(player));
         if (enabled == null || enabled.isEmpty()) {
             return;
         }
@@ -755,7 +821,7 @@ public class MineManager {
         if (!isAutoSellSystemEnabled()) {
             return false;
         }
-        Set<String> enabled = autoSellItems.get(player.getName());
+        Set<String> enabled = autoSellItems.get(storageKey(player));
         if (enabled == null || enabled.isEmpty()) {
             return false;
         }
@@ -764,7 +830,10 @@ public class MineManager {
 
     public static boolean toggleItemAutoSell(@NotNull Player player,
                                              @NotNull String material) {
-        String playerName = player.getName();
+        if (denySell(player)) {
+            return isAutoSellEnabledForItem(player, material);
+        }
+        String playerName = storageKey(player);
         Set<String> enabled = autoSellItems.computeIfAbsent(playerName, k -> new HashSet<>());
 
         boolean next;
@@ -787,7 +856,7 @@ public class MineManager {
 
     private static void scheduleAutoSellIfNeeded(@NotNull Player player,
                                                  @NotNull String material) {
-        if (!isAutoSellEnabledForItem(player, material)) {
+        if (!isAutoSellEnabledForItem(player, material) || !IslandStorageManager.canSell(player)) {
             return;
         }
 
@@ -969,7 +1038,7 @@ public class MineManager {
             amountToRemove = event.getAmount();
         }
 
-        playerdata.replace(p.getName() + "_" + material,
+        playerdata.replace(storageKey(p) + "_" + material,
                 Math.max(oldData - amountToRemove, 0));
 
         if (fireEvent) {
@@ -979,6 +1048,10 @@ public class MineManager {
     }
 
     public static void loadPlayerData(Player p) {
+        String key = IslandStorageManager.resolveKey(p);
+        // Another online member already holds the live island data; reloading would overwrite unsaved changes.
+        boolean firstLoad = !isKeyInUse(key, p.getUniqueId());
+        activeKey.put(p.getUniqueId(), key);
         PlayerData playerData = getPlayerDatabase(p);
         SpecialMaterialManager.loadPlayerData(p, playerData.data());
         List<String> list = convertOnlineData(playerData.data());
@@ -987,12 +1060,16 @@ public class MineManager {
         int permissionMax = Math.max(0, getPermissionMaxStorage(p));
         Integer overrideMax = null;
 
-        setBlock(p, list);
+        if (firstLoad) {
+            setBlock(p, list);
+        }
 
         String rawData = playerData.data();
         if (rawData != null && !rawData.isEmpty()) {
-            loadDisabledAutoPickupItems(p.getName(), rawData);
-            loadAutoSellItems(p.getName(), rawData);
+            if (firstLoad) {
+                loadDisabledAutoPickupItems(key, rawData);
+                loadAutoSellItems(key, rawData);
+            }
             Integer parsedMaxOverride = parseMaxOverride(rawData);
             if (parsedMaxOverride != null) {
                 overrideMax = Math.max(0, parsedMaxOverride);
@@ -1038,7 +1115,7 @@ public class MineManager {
 
     public static void savePlayerData(@NotNull Player p) {
         boolean autoPickup = getToggleStatus(p);
-        PlayerData existing = Storage.db.getData(p.getName());
+        PlayerData existing = Storage.db.getData(storageKey(p));
         int maxToSave;
         if (existing != null) {
             maxToSave = existing.max();
@@ -1049,7 +1126,7 @@ public class MineManager {
             );
         }
         PlayerData playerData = new PlayerData(
-                p.getName(),
+                storageKey(p),
                 SpecialMaterialManager.mergePlayerData(p,
                         convertOfflineData(p), existing == null ? null : existing.data()),
                 Math.max(0, maxToSave),
@@ -1069,10 +1146,14 @@ public class MineManager {
         clearMaxStorageOverride(p);
         groundStoreToggle.remove(playerId);
 
-        String playerName = p.getName();
-        playerdata.entrySet().removeIf(entry -> entry.getKey().startsWith(playerName + "_"));
-        disabledAutoPickupItems.remove(playerName);
-        autoSellItems.remove(playerName);
+        String playerName = storageKey(p);
+        activeKey.remove(playerId);
+        // Island data stays in memory while another member is still online.
+        if (!isKeyInUse(playerName, playerId)) {
+            playerdata.entrySet().removeIf(entry -> entry.getKey().startsWith(playerName + "_"));
+            disabledAutoPickupItems.remove(playerName);
+            autoSellItems.remove(playerName);
+        }
 
         String prefix = p.getUniqueId() + "_";
         synchronized (pendingAutoSell) {
@@ -1418,7 +1499,7 @@ public class MineManager {
     }
 
     public static int getPlayerBlock(@NotNull String playerName, @NotNull String material) {
-        return playerdata.getOrDefault(playerName + "_" + material, 0);
+        return playerdata.getOrDefault(resolveStorageName(playerName) + "_" + material, 0);
     }
 
     public static int getMaxStorage() {
@@ -1435,13 +1516,14 @@ public class MineManager {
             return true;
         }
 
+        String storageName = resolveStorageName(playerName);
         for (String key : playerdata.keySet()) {
-            if (key.startsWith(playerName + "_")) {
+            if (key.startsWith(storageName + "_")) {
                 return true;
             }
         }
 
-        PlayerData data = Storage.db.getData(playerName);
+        PlayerData data = Storage.db.getData(storageName);
         if (data == null) {
             return false;
         }
@@ -1456,7 +1538,7 @@ public class MineManager {
 
         String rawData = data.data();
         if (rawData != null && !rawData.isEmpty()) {
-            loadDisabledAutoPickupItems(playerName, rawData);
+            loadDisabledAutoPickupItems(storageName, rawData);
         }
 
         List<String> list = convertOnlineData(data.data());
@@ -1465,7 +1547,7 @@ public class MineManager {
             if (block_data.length >= 3) {
                 String material = block_data[0] + ";" + block_data[1];
                 int amount = Number.getInteger(block_data[2]);
-                playerdata.put(playerName + "_" + material, amount);
+                playerdata.put(storageName + "_" + material, amount);
             }
         }
 
@@ -1479,9 +1561,14 @@ public class MineManager {
             return;
         }
 
-        playerdata.entrySet().removeIf(entry -> entry.getKey().startsWith(playerName + "_"));
-        disabledAutoPickupItems.remove(playerName);
-        autoSellItems.remove(playerName);
+        String storageName = resolveStorageName(playerName);
+        if (isKeyInUse(storageName, null)) {
+            return;
+        }
+
+        playerdata.entrySet().removeIf(entry -> entry.getKey().startsWith(storageName + "_"));
+        disabledAutoPickupItems.remove(storageName);
+        autoSellItems.remove(storageName);
     }
 
     public static int getPlayerItem(@NotNull String playerName, @NotNull String material) {
@@ -1491,13 +1578,13 @@ public class MineManager {
     public static void addItemAmount(@NotNull String playerName, @NotNull String material, int amount) {
         if (amount <= 0) return;
         int current = getPlayerBlock(playerName, material);
-        playerdata.put(playerName + "_" + material, current + amount);
+        playerdata.put(resolveStorageName(playerName) + "_" + material, current + amount);
     }
 
     public static void removeItemAmount(@NotNull String playerName, @NotNull String material, int amount) {
         if (amount <= 0) return;
         int current = getPlayerBlock(playerName, material);
-        playerdata.put(playerName + "_" + material, Math.max(0, current - amount));
+        playerdata.put(resolveStorageName(playerName) + "_" + material, Math.max(0, current - amount));
     }
 
     private record InvLookupKey(Material material, short durability) {

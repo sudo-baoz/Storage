@@ -45,6 +45,7 @@ public class CommandManager {
         registerCommand("specialmaterial", new SpecialMaterialCommand());
         registerCommand("crafteditor", new CraftEditorCommand());
         registerCommand("friends", new FriendCommand());
+        registerCommand("island", new IslandCommand());
     }
 
     private void registerCommand(String name, CommandHandler handler) {

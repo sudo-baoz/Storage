@@ -17,6 +17,9 @@ public class PluginLoadListener implements Listener {
         if (name == null) {
             return;
         }
+        if (name.equals("SuperiorSkyblock2")) {
+            Storage.setupIslandStorage();
+        }
         if (name.equals("Vault")) {
             Storage.refreshVaultEconomyHook();
         }

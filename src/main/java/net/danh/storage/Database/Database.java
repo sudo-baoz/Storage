@@ -35,11 +35,12 @@ public abstract class Database {
         }
     }
 
+    // One shared connection: never close it per call, and serialize access (autosave/async callers).
     // These are the methods you can use to get things out of your database. You of course can make new ones to return different things in the database.
     // This returns the number of people the player killed.
-    public PlayerData getData(String player) {
-        try (Connection conn = getSQLConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM " + table + " WHERE player = ?")) {
+    public synchronized PlayerData getData(String player) {
+        Connection conn = getSQLConnection();
+        try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM " + table + " WHERE player = ?")) {
             ps.setString(1, player);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
@@ -58,9 +59,9 @@ public abstract class Database {
         }
     }
 
-    public void createTable(@NotNull PlayerData playerData) {
-        try (Connection conn = getSQLConnection();
-             PreparedStatement ps = conn.prepareStatement("INSERT INTO " + table + " (player,data,max,autopickup) VALUES(?,?,?,?)")) {
+    public synchronized void createTable(@NotNull PlayerData playerData) {
+        Connection conn = getSQLConnection();
+        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO " + table + " (player,data,max,autopickup) VALUES(?,?,?,?)")) {
             ps.setString(1, playerData.player());
             ps.setString(2, playerData.data());
             ps.setInt(3, playerData.max());
@@ -71,7 +72,7 @@ public abstract class Database {
         }
     }
 
-    public void updateTable(@NotNull PlayerData playerData) {
+    public synchronized void updateTable(@NotNull PlayerData playerData) {
         Connection conn = null;
         try {
             conn = getSQLConnection();
@@ -96,7 +97,7 @@ public abstract class Database {
         } finally {
             if (conn != null) {
                 try {
-                    conn.close();
+                    conn.setAutoCommit(true);
                 } catch (SQLException ex) {
                     Storage.getStorage().getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
                 }
@@ -104,9 +105,9 @@ public abstract class Database {
         }
     }
 
-    public void deleteData(String player) {
-        try (Connection conn = getSQLConnection();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM " + table + " WHERE player = ?")) {
+    public synchronized void deleteData(String player) {
+        Connection conn = getSQLConnection();
+        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM " + table + " WHERE player = ?")) {
             ps.setString(1, player);
             ps.executeUpdate();
         } catch (SQLException ex) {

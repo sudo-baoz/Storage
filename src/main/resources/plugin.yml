@@ -16,6 +16,7 @@ softdepend:
   - PlayerPoints
   - Vault
   - VaultUnlocked
+  - SuperiorSkyblock2
 
 commands:
   storage:
@@ -59,6 +60,7 @@ permissions:
       storage.deposit: true
       storage.withdraw: true
       storage.sell: true
+      storage.island: true
       storage.view: true
       storage.transfer.use: true
       storage.transfer.multi: true

@@ -480,3 +480,10 @@ sounds:
       name: "ENTITY_VILLAGER_NO"
       volume: 0.8
       pitch: 0.8
+
+# Shared island storage (requires SuperiorSkyblock2).
+# All members of an island use the storage of the island owner. Members can always auto-pickup and withdraw.
+island_storage:
+  enabled: true
+  # Whether island members may sell items unless the owner decides otherwise (/storage island sell <player> <on|off>).
+  default_member_sell: false

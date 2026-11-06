@@ -570,7 +570,7 @@ public class SpecialMaterialManager {
     }
 
     private static Map<String, DailyCounter> loadDailyLimits(Player player) {
-        PlayerData data = Storage.dataStorage.getData(player.getName());
+        PlayerData data = Storage.dataStorage.getData(net.danh.storage.Manager.MineManager.storageKey(player));
         return parseDailyLimits(data == null ? null : data.data());
     }
 
@@ -633,9 +633,9 @@ public class SpecialMaterialManager {
         if (player == null) return;
         Map<String, DailyCounter> limits = dailyLimits.get(player.getUniqueId());
         if (limits == null || limits.isEmpty()) return;
-        PlayerData existing = Storage.dataStorage.getData(player.getName());
+        PlayerData existing = Storage.dataStorage.getData(net.danh.storage.Manager.MineManager.storageKey(player));
         if (existing == null) return;
-        Storage.dataStorage.updateTable(new PlayerData(player.getName(),
+        Storage.dataStorage.updateTable(new PlayerData(existing.player(),
                 mergeDailyLimitsData(existing.data(), limits), existing.max(), existing.autoPickup()));
     }
 

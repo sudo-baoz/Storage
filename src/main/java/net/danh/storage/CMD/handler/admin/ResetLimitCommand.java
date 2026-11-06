@@ -27,7 +27,7 @@ public class ResetLimitCommand extends BaseCommand {
             return;
         }
 
-        PlayerData existing = Storage.db.getData(target.getName());
+        PlayerData existing = Storage.db.getData(MineManager.storageKey(target));
         int defaultMax = File.getConfig().getInt(
                 "settings.default_max_storage",
                 100000

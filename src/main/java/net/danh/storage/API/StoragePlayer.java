@@ -173,9 +173,9 @@ public record StoragePlayer(Player player) {
     @NotNull
     public Set<String> getStoredMaterials() {
         return MineManager.playerdata.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(player.getName() + "_"))
+                .filter(entry -> entry.getKey().startsWith(MineManager.storageKey(player) + "_"))
                 .filter(entry -> entry.getValue() > 0)
-                .map(entry -> entry.getKey().substring(player.getName().length() + 1))
+                .map(entry -> entry.getKey().substring(MineManager.storageKey(player).length() + 1))
                 .collect(Collectors.toSet());
     }
 
