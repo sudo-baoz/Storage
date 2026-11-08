@@ -21,7 +21,6 @@ public class CommandManager {
     private void registerCommands() {
         registerCommand("help", new HelpCommand());
         registerCommand("toggle", new ToggleCommand());
-        registerCommand("groundstore", new GroundStoreCommand());
         registerCommand("view", new ViewCommand());
         registerCommand("transfer", new TransferCommand());
         registerCommand("deposit", new DepositCommand());

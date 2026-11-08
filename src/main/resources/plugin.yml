@@ -9,7 +9,6 @@ load: STARTUP
 softdepend:
   - WorldGuard
   - PlaceholderAPI
-  - MythicMobs
   - LuckPerms
   - MMOItems
   - MythicLib
@@ -26,37 +25,14 @@ commands:
       - kks
       - khokhoangsan
 
-  mythicstorage:
-    description: MythicMobs storage command
-    aliases:
-      - mythics
-      - khoquaivat
-      - kqv
-      - khoqv
 
-  cropstorage:
-    description: Crop storage command
-    aliases:
-      - cstorage
-      - khonongsan
-      - khons
-      - cropss
 
-  mobstorage:
-    description: Mob drops storage command
-    aliases:
-      - khomob
-      - khosinhvat
-      - ksv
-      - mstore
-      
 permissions:
   storage.user:
     description: User permission
     default: true
     children:
       storage.toggle: true
-      storage.groundstore: true
       storage.deposit: true
       storage.withdraw: true
       storage.sell: true
@@ -69,30 +45,6 @@ permissions:
       storage.enchant.use: true
       storage.event.view: true
       storage.craft.use: true
-      storage.mythicstorage.use: true
-      storage.mythicstorage.toggle: true
-      storage.mythicstorage.groundstore: true
-      storage.mythicstorage.view: true
-      storage.mythicstorage.transfer: true
-      storage.mythicstorage.transfer.multi: true
-      storage.mythicstorage.transfer.log: true
-      storage.mythicstorage.transfer.log.others: true
-      storage.cropstorage.use: true
-      storage.cropstorage.toggle: true
-      storage.cropstorage.groundstore: true
-      storage.cropstorage.view: true
-      storage.cropstorage.transfer.use: true
-      storage.cropstorage.transfer.multi: true
-      storage.cropstorage.transfer.log: true
-      storage.mobstorage.use: true
-      storage.mobstorage.toggle: true
-      storage.mobstorage.groundstore: true
-      storage.mobstorage.view: true
-      storage.mobstorage.deposit: true
-      storage.mobstorage.withdraw: true
-      storage.mobstorage.sell: true
-      storage.mobstorage.autosell: true
-      storage.mobstorage.transfer.use: true
       storage.friends.use: true
       storage.friends.add: true
       storage.friends.accept: true
@@ -107,10 +59,6 @@ permissions:
 
   storage.toggle:
     description: Toggle permission
-    default: true
-
-  storage.groundstore:
-    description: Toggle Storage ground-store
     default: true
 
   storage.deposit:
@@ -147,10 +95,6 @@ permissions:
       storage.transfer.log.others: true
       storage.convert: true
       storage.craft.admin: true
-      storage.mythicstorage.admin: true
-      storage.cropstorage.admin: true
-      storage.mobstorage.admin: true
-      storage.cropstorage.transfer.log.others: true
       storage.preventrebreak.bypass: true
 
   storage.admin.add:
@@ -229,41 +173,14 @@ permissions:
     description: View other players' storage
     default: true
 
-  storage.mythicstorage.use:
-    description: Use MythicMobs storage feature
-    default: true
 
-  storage.mythicstorage.toggle:
-    description: Toggle MythicMobs auto-pickup
-    default: true
 
-  storage.mythicstorage.groundstore:
-    description: Toggle MythicStorage ground-store
-    default: true
 
-  storage.mythicstorage.view:
-    description: View other players' MythicMobs storage
-    default: true
 
-  storage.mythicstorage.admin:
-    description: Admin commands for MythicMobs storage
-    default: op
 
-  storage.mythicstorage.transfer:
-    description: Transfer MythicMobs items to other players
-    default: true
 
-  storage.mythicstorage.transfer.multi:
-    description: Transfer multiple MythicMobs items at once
-    default: true
 
-  storage.mythicstorage.transfer.log:
-    description: View own MythicMobs transfer logs
-    default: true
 
-  storage.mythicstorage.transfer.log.others:
-    description: View other players MythicMobs transfer logs
-    default: true
 
   storage.craft.use:
     description: Use crafting feature
@@ -273,141 +190,37 @@ permissions:
     description: Admin commands for crafting system
     default: op
 
-  storage.cropstorage.use:
-    description: Use crop storage feature
-    default: true
 
-  storage.cropstorage.autosell:
-    description: Toggle per-item auto sell for CropStorage
-    default: op
 
-  storage.cropstorage.toggle:
-    description: Toggle crop auto-pickup
-    default: true
 
-  storage.cropstorage.groundstore:
-    description: Toggle CropStorage ground-store
-    default: true
 
-  storage.cropstorage.view:
-    description: View other players' crop storage
-    default: true
 
-  storage.cropstorage.admin:
-    description: Admin commands for crop storage
-    default: op
 
-  storage.cropstorage.transfer.use:
-    description: Transfer CropStorage items to other players
-    default: true
 
-  storage.cropstorage.transfer.multi:
-    description: Transfer multiple CropStorage items at once
-    default: true
 
-  storage.cropstorage.transfer.log:
-    description: View own CropStorage transfer logs
-    default: true
 
-  storage.cropstorage.transfer.log.others:
-    description: View other players CropStorage transfer logs
-    default: op
 
-  storage.mobstorage.use:
-    description: Use mob storage feature
-    default: true
 
-  storage.mobstorage.toggle:
-    description: Toggle mob drop auto-pickup
-    default: true
 
-  storage.mobstorage.groundstore:
-    description: Toggle MobStorage ground-store
-    default: true
 
-  storage.mobstorage.view:
-    description: View MobStorage contents
-    default: true
 
-  storage.mobstorage.deposit:
-    description: Deposit mob drops into MobStorage
-    default: true
 
-  storage.mobstorage.withdraw:
-    description: Withdraw mob drops from MobStorage
-    default: true
 
-  storage.mobstorage.sell:
-    description: Sell mob drops from MobStorage
-    default: true
 
-  storage.mobstorage.autosell:
-    description: Toggle per-item AutoSell for MobStorage
-    default: true
 
-  storage.mobstorage.transfer.use:
-    description: Transfer MobStorage items to other players
-    default: true
 
-  storage.mobstorage.transfer.multi:
-    description: Transfer multiple MobStorage items at once
-    default: true
 
-  storage.mobstorage.transfer.log:
-    description: View own MobStorage transfer logs
-    default: true
 
-  storage.mobstorage.transfer.log.others:
-    description: View other players MobStorage transfer logs
-    default: op
 
-  storage.mobstorage.admin:
-    description: Admin commands for mob storage
-    default: op
-    children:
-      storage.mobstorage.admin.add: true
-      storage.mobstorage.admin.remove: true
-      storage.mobstorage.admin.set: true
-      storage.mobstorage.admin.max: true
-      storage.mobstorage.admin.reset: true
-      storage.mobstorage.admin.resetlimit: true
-      storage.mobstorage.admin.reload: true
 
-  storage.mobstorage.admin.add:
-    description: Add items to MobStorage
-    default: op
 
-  storage.mobstorage.admin.remove:
-    description: Remove items from MobStorage
-    default: op
 
-  storage.mobstorage.admin.set:
-    description: Set items in MobStorage
-    default: op
 
-  storage.mobstorage.admin.max:
-    description: Set MobStorage max override
-    default: op
 
-  storage.mobstorage.admin.reset:
-    description: Reset MobStorage contents for a player
-    default: op
 
-  storage.mobstorage.admin.resetlimit:
-    description: Reset MobStorage max override for a player
-    default: op
 
-  storage.mobstorage.storage:
-    description: Base node for storage tier permissions.
-    default: false
 
-  storage.mobstorage.storage.max:
-    description: Base node for max storage size permissions.
-    default: false
 
-  storage.mobstorage.autosell.delay:
-    description: Base node for AutoSell delay permissions.
-    default: false
 
   storage.preventrebreak.bypass:
     description: Bypass prevent rebreak placed-block protection
@@ -457,3 +270,11 @@ permissions:
     description: Open friend shared storage
     default: true
 
+
+  storage.island:
+    description: Manage the shared island storage
+    default: true
+
+  storage.donate.craft:
+    description: Use the Crafter button (craft stored items into blocks)
+    default: false

@@ -6,10 +6,7 @@ import de.tr7zw.changeme.nbtapi.NBTItem;
 import net.danh.storage.API.events.RecipeCraftEvent;
 import net.danh.storage.API.events.RecipeCreateEvent;
 import net.danh.storage.Listeners.ChatListener;
-import net.danh.storage.Manager.Crop.CropStorageManager;
 import net.danh.storage.Manager.MineManager;
-import net.danh.storage.Manager.Mob.MobStorageManager;
-import net.danh.storage.Manager.Mythic.MythicStorageManager;
 import net.danh.storage.Manager.ParticleManager;
 import net.danh.storage.Manager.SoundManager;
 import net.danh.storage.Recipe.Recipe;
@@ -617,52 +614,7 @@ public class CraftingManager {
 
     private static int getAvailableMaterialAmount(Player player, String requirementKey) {
         String normalized = MineManager.normalizeMaterial(requirementKey);
-        String mythicId = getMythicItemId(normalized);
-        if (mythicId != null) {
-            if (!MythicStorageManager.isSystemEnabled()) {
-                return 0;
-            }
-            return MythicStorageManager.getPlayerItem(player, mythicId);
-        }
-
-        String cropItem = getTypedStorageItemId(normalized, "crop");
-        if (cropItem != null) {
-            if (!CropStorageManager.isSystemEnabled()) {
-                return 0;
-            }
-            return CropStorageManager.getPlayerItem(player, cropItem);
-        }
-
-        String mobItem = getTypedStorageItemId(normalized, "mob");
-        if (mobItem != null) {
-            if (!MobStorageManager.isSystemEnabled()) {
-                return 0;
-            }
-            return MobStorageManager.getPlayerItem(player, mobItem);
-        }
         return MineManager.getPlayerBlock(player, normalized);
-    }
-
-    private static String getMythicItemId(String normalizedKey) {
-        return getTypedStorageItemId(normalizedKey, "mythic");
-    }
-
-    private static String getTypedStorageItemId(String normalizedKey, String type) {
-        if (normalizedKey == null || normalizedKey.isEmpty()) {
-            return null;
-        }
-        if (!normalizedKey.startsWith(type + ";")) {
-            return null;
-        }
-        String[] parts = normalizedKey.split(";", 3);
-        if (parts.length < 2) {
-            return null;
-        }
-        String id = parts[1];
-        if (id == null || id.trim().isEmpty()) {
-            return null;
-        }
-        return id.trim();
     }
 
     public static void requestCraftAmount(Player player, String recipeId) {
@@ -989,44 +941,9 @@ public class CraftingManager {
             String normalizedMaterial = MineManager.normalizeMaterial(requirement.getKey());
             int totalRequired = requirement.getValue() * amount;
 
-            String mythicId = getMythicItemId(normalizedMaterial);
-            if (mythicId != null) {
-                if (!MythicStorageManager.isSystemEnabled()) {
-                    return false;
-                }
-                if (!MythicStorageManager.removeItemAmount(player, mythicId,
-                        totalRequired, true)) {
-                    return false;
-                }
-                continue;
-            }
-
-            String cropItem = getTypedStorageItemId(normalizedMaterial, "crop");
-            if (cropItem != null) {
-                if (!CropStorageManager.isSystemEnabled()) {
-                    return false;
-                }
-                if (!CropStorageManager.removeItemAmount(player, cropItem,
-                        totalRequired, true)) {
-                    return false;
-                }
-                continue;
-            }
-
-            String mobItem = getTypedStorageItemId(normalizedMaterial, "mob");
-            if (mobItem != null) {
-                if (!MobStorageManager.isSystemEnabled()) {
-                    return false;
-                }
-                if (!MobStorageManager.removeItemAmount(player, mobItem,
-                        totalRequired, true)) {
-                    return false;
-                }
-            } else {
-                if (!MineManager.removeBlockAmount(player, normalizedMaterial,
-                        totalRequired)) {
-                    return false;
-                }
+            if (!MineManager.removeBlockAmount(player, normalizedMaterial,
+                    totalRequired)) {
+                return false;
             }
         }
         return true;

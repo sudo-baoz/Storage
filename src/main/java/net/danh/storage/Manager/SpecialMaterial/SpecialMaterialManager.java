@@ -6,10 +6,8 @@ import com.cryptomorin.xseries.messages.Titles;
 import net.danh.storage.API.events.SpecialMaterialDropEvent;
 import net.danh.storage.Database.PlayerData;
 import net.danh.storage.Enchant.MultiplierEnchant;
-import net.danh.storage.Manager.Crop.CropStorageManager;
 import net.danh.storage.Manager.EnchantManager;
 import net.danh.storage.Manager.MineManager;
-import net.danh.storage.Manager.Mob.MobStorageManager;
 import net.danh.storage.Manager.ParticleManager;
 import net.danh.storage.NMS.NMSAssistant;
 import net.danh.storage.Storage;
@@ -383,9 +381,6 @@ public class SpecialMaterialManager {
         if (!systemEnabled || specialMaterials.isEmpty() || player == null || sourceType == null || sourceKey == null)
             return;
         boolean autoPickup = isAutoPickupEnabled(player, sourceType);
-        if (SOURCE_CROP.equals(sourceType)) {
-            autoPickup &= !CropStorageManager.isItemAutoPickupDisabled(player, sourceKey);
-        }
         checkSpecialMaterialDrop(player, null, sourceType, sourceKey, location, null, stored, autoPickup);
     }
 
@@ -403,8 +398,7 @@ public class SpecialMaterialManager {
                 sourceType, sourceKey, location, stored);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) return;
-        Collection<String> keys = SOURCE_MOB.equals(sourceType)
-                ? MobStorageManager.getMobLookupKeys(sourceKey) : Collections.singleton(sourceKey);
+        Collection<String> keys = Collections.singleton(sourceKey);
         for (SpecialMaterial material : materials.values()) {
             for (String key : keys) {
                 if (material.canDropFrom(sourceType, key)) {
@@ -464,16 +458,7 @@ public class SpecialMaterialManager {
     }
 
     private static int giveStorageReward(Player player, String sourceType, RewardEntry reward) {
-        if (SOURCE_CROP.equals(sourceType)) {
-            int before = CropStorageManager.getPlayerItem(player, reward.item());
-            if (!CropStorageManager.addItemAmount(player, reward.item(), reward.amount(), true, true)) return 0;
-            return CropStorageManager.getPlayerItem(player, reward.item()) - before;
-        }
-        if (SOURCE_MOB.equals(sourceType)) {
-            int before = MobStorageManager.getPlayerItem(player, reward.item());
-            if (!MobStorageManager.addItemAmount(player, reward.item(), reward.amount(), true)) return 0;
-            return MobStorageManager.getPlayerItem(player, reward.item()) - before;
-        }
+        // CropStorage/MobStorage were removed: there is no storage to receive such rewards.
         return 0;
     }
 
@@ -527,8 +512,6 @@ public class SpecialMaterialManager {
     }
 
     private static boolean isAutoPickupEnabled(Player player, String sourceType) {
-        if (SOURCE_CROP.equals(sourceType)) return CropStorageManager.getToggleStatus(player);
-        if (SOURCE_MOB.equals(sourceType)) return MobStorageManager.getToggleStatus(player);
         return true;
     }
 
@@ -740,9 +723,8 @@ public class SpecialMaterialManager {
         values.put("#special_amount#", String.valueOf(amount));
         values.put("#reward_amount#", String.valueOf(rewardAmount));
         values.put("#loot_amount#", String.valueOf(lootAmount));
-        values.put("#storage#", SOURCE_CROP.equals(sourceType) ? "CropStorage" : SOURCE_MOB.equals(sourceType) ? "MobStorage" : "");
-        values.put("#reward_item#", reward == null ? "" : SOURCE_CROP.equals(sourceType)
-                ? CropStorageManager.getItemDisplayName(reward.item()) : MobStorageManager.getItemDisplayName(reward.item()));
+        values.put("#storage#", "");
+        values.put("#reward_item#", reward == null ? "" : reward.item());
         ItemMeta meta = loot == null ? null : loot.item().getItemMeta();
         values.put("#loot_item#", loot == null ? "" : meta != null && meta.hasDisplayName()
                 ? meta.getDisplayName() : loot.item().getType().name());

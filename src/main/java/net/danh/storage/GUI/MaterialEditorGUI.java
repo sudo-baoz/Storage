@@ -1,18 +1,13 @@
 package net.danh.storage.GUI;
 
 import net.danh.storage.GUI.Crafting.RecipeEditorGUI;
-import net.danh.storage.GUI.Mythic.MythicMaterialSelectionGUI;
 import net.danh.storage.GUI.manager.IGUI;
 import net.danh.storage.GUI.manager.InteractiveItem;
 import net.danh.storage.Manager.Crafting.CraftingManager;
 import net.danh.storage.Manager.Crafting.RecipeEditManager;
-import net.danh.storage.Manager.Crop.CropStorageManager;
 import net.danh.storage.Manager.ItemManager;
 import net.danh.storage.Manager.MineManager;
-import net.danh.storage.Manager.Mob.MobStorageManager;
-import net.danh.storage.Manager.Mythic.MythicStorageManager;
 import net.danh.storage.Manager.SoundManager;
-import net.danh.storage.MythicMobs.MythicMobsHelper;
 import net.danh.storage.Recipe.Recipe;
 import net.danh.storage.Utils.*;
 import net.danh.storage.Utils.Number;
@@ -69,15 +64,6 @@ public class MaterialEditorGUI implements IGUI {
         setupDecorativeItems(inventory);
         addTitleItem(inventory);
         addAddMaterialButton(inventory);
-        addAddStorageMaterialButton(inventory, "items.add_crop_material",
-                "items.add_crop_material_disabled",
-                CropStorageManager.isSystemEnabled(),
-                this::openCropMaterialSelection);
-        addAddMythicMaterialButton(inventory);
-        addAddStorageMaterialButton(inventory, "items.add_mob_material",
-                "items.add_mob_material_disabled",
-                MobStorageManager.isSystemEnabled(),
-                this::openMobMaterialSelection);
         displayMaterials(inventory);
         addControlButtons(inventory);
     }
@@ -156,78 +142,7 @@ public class MaterialEditorGUI implements IGUI {
         }
     }
 
-    private void addAddMythicMaterialButton(Inventory inventory) {
-        String slotConfig = config.getString("items.add_mythic_material.slot", "50");
-        int materialCount = recipe.getMaterialRequirements().size();
 
-        ItemStack item;
-        boolean canUse = MythicStorageManager.isSystemEnabled()
-                && materialCount < MAX_MATERIALS;
-
-        if (canUse) {
-            item = ItemManager.getItemConfig(Objects.requireNonNull(
-                    config.getConfigurationSection("items.add_mythic_material")));
-        } else {
-            item = ItemManager.getItemConfig(
-                    config.getConfigurationSection("items.add_mythic_material_disabled"));
-        }
-
-        if (item == null) {
-            return;
-        }
-
-        if (slotConfig.contains(",")) {
-            for (String slotStr : slotConfig.split(",")) {
-                int slot = Number.getInteger(slotStr.trim());
-                InteractiveItem button = new InteractiveItem(item.clone(), slot);
-                if (canUse) {
-                    button.onLeftClick(this::openMythicMaterialSelection);
-                }
-                inventory.setItem(button.getSlot(), button);
-            }
-        } else {
-            int slot = Number.getInteger(slotConfig);
-            InteractiveItem button = new InteractiveItem(item, slot);
-            if (canUse) {
-                button.onLeftClick(this::openMythicMaterialSelection);
-            }
-            inventory.setItem(button.getSlot(), button);
-        }
-    }
-
-    private void addAddStorageMaterialButton(Inventory inventory,
-                                             String enabledPath,
-                                             String disabledPath,
-                                             boolean systemEnabled,
-                                             Consumer<Player> clickAction) {
-        String slotConfig = config.getString(enabledPath + ".slot", "40");
-        int materialCount = recipe.getMaterialRequirements().size();
-        boolean canUse = systemEnabled && materialCount < MAX_MATERIALS;
-
-        ItemStack item = ItemManager.getItemConfig(config.getConfigurationSection(
-                canUse ? enabledPath : disabledPath));
-        if (item == null) {
-            return;
-        }
-
-        if (slotConfig.contains(",")) {
-            for (String slotStr : slotConfig.split(",")) {
-                int slot = Number.getInteger(slotStr.trim());
-                InteractiveItem button = new InteractiveItem(item.clone(), slot);
-                if (canUse) {
-                    button.onLeftClick(clickAction::accept);
-                }
-                inventory.setItem(button.getSlot(), button);
-            }
-        } else {
-            int slot = Number.getInteger(slotConfig);
-            InteractiveItem button = new InteractiveItem(item, slot);
-            if (canUse) {
-                button.onLeftClick(clickAction::accept);
-            }
-            inventory.setItem(button.getSlot(), button);
-        }
-    }
 
     private void displayMaterials(Inventory inventory) {
         String materialSlots = config.getString("items.material_slot.slot");
@@ -255,21 +170,6 @@ public class MaterialEditorGUI implements IGUI {
 
     private ItemStack createMaterialItem(String materialName, int amount) {
         String normalized = MineManager.normalizeMaterial(materialName);
-        String mythicId = getMythicItemId(normalized);
-        if (mythicId != null) {
-            return createMythicMaterialItem(mythicId, normalized, amount);
-        }
-
-        String cropItem = getTypedStorageItemId(normalized, "crop");
-        if (cropItem != null) {
-            return createStorageMaterialItem(cropItem, CropStorageManager.getItemDisplayName(cropItem), amount);
-        }
-
-        String mobItem = getTypedStorageItemId(normalized, "mob");
-        if (mobItem != null) {
-            return createStorageMaterialItem(mobItem, MobStorageManager.getItemDisplayName(mobItem), amount);
-        }
-
         String displayMaterial = normalized;
         if (normalized.contains(";")) {
             displayMaterial = normalized.split(";", 2)[0];
@@ -290,48 +190,7 @@ public class MaterialEditorGUI implements IGUI {
         return item;
     }
 
-    private ItemStack createMythicMaterialItem(String mythicId,
-                                               String normalizedKey,
-                                               int amount) {
-        String displayName = MythicStorageManager.getItemDisplayNameOrId(
-                mythicId, player);
 
-        ItemStack item = null;
-        if (MythicStorageManager.isSystemEnabled()) {
-            MythicMobsHelper helper = MythicStorageManager.getMythicMobsHelper();
-            if (helper != null && helper.isInitialized()) {
-                item = helper.getMythicItem(mythicId);
-            }
-        }
-
-        if (item == null) {
-            item = new ItemStack(Material.STONE);
-            if (item == null) {
-                return null;
-            }
-        } else {
-            item = item.clone();
-        }
-
-        String configName = File.getConfig().getString("items." + normalizedKey,
-                displayName);
-        applyMaterialMeta(item, configName, amount);
-        return item;
-    }
-
-    private ItemStack createStorageMaterialItem(String itemId, String displayName,
-                                                int amount) {
-        ItemStack item = MaterialUtils.createItem(itemId);
-        if (item == null) {
-            item = new ItemStack(Material.STONE);
-        }
-        if (item == null) {
-            return null;
-        }
-
-        applyMaterialMeta(item, displayName, amount);
-        return item;
-    }
 
     private void applyMaterialMeta(ItemStack item, String displayName,
                                    int amount) {
@@ -354,27 +213,7 @@ public class MaterialEditorGUI implements IGUI {
         item.setAmount(Math.min(64, Math.max(1, amount)));
     }
 
-    private String getMythicItemId(String normalizedKey) {
-        return getTypedStorageItemId(normalizedKey, "mythic");
-    }
 
-    private String getTypedStorageItemId(String normalizedKey, String type) {
-        if (normalizedKey == null || normalizedKey.isEmpty()) {
-            return null;
-        }
-        if (!normalizedKey.startsWith(type + ";")) {
-            return null;
-        }
-        String[] parts = normalizedKey.split(";", 3);
-        if (parts.length < 2) {
-            return null;
-        }
-        String id = parts[1];
-        if (id == null || id.trim().isEmpty()) {
-            return null;
-        }
-        return id.trim();
-    }
 
     private void handleMaterialClick(Player player, String material, ClickType clickType) {
         Map<String, Integer> requirements = recipe.getMaterialRequirements();
@@ -417,23 +256,8 @@ public class MaterialEditorGUI implements IGUI {
         player.openInventory(new MaterialSelectionGUI(player, recipe, "requirement").getInventory(SoundContext.SILENT));
     }
 
-    private void openMythicMaterialSelection(Player player) {
-        SoundManager.setShouldPlayCloseSound(player, false);
-        player.openInventory(new MythicMaterialSelectionGUI(player, recipe)
-                .getInventory(SoundContext.SILENT));
-    }
 
-    private void openCropMaterialSelection(Player player) {
-        SoundManager.setShouldPlayCloseSound(player, false);
-        player.openInventory(new MaterialSelectionGUI(player, recipe,
-                "crop_requirement").getInventory(SoundContext.SILENT));
-    }
 
-    private void openMobMaterialSelection(Player player) {
-        SoundManager.setShouldPlayCloseSound(player, false);
-        player.openInventory(new MaterialSelectionGUI(player, recipe,
-                "mob_requirement").getInventory(SoundContext.SILENT));
-    }
 
     private void addControlButtons(Inventory inventory) {
         // Back button

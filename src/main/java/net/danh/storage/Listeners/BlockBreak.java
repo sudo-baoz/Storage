@@ -17,6 +17,8 @@ import net.danh.storage.Utils.File;
 import net.danh.storage.Utils.NotificationQueue;
 import net.danh.storage.Utils.Number;
 import net.danh.storage.WorldGuard.WorldGuard;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
@@ -31,7 +33,10 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.metadata.MetadataValue;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -148,18 +153,45 @@ public class BlockBreak implements Listener {
                 if (!MineManager.isAutoPickupEnabledForItem(p, drop)) {
                     return;
                 }
+                // Every vanilla drop of the block, sorted by what the storage does with it. Items the storage
+                // doesn't take must still reach the world, because setDropItems(false) removes all of them.
+                List<ItemStack> natural = collectDrops(block, hand);
+                int fromDrops = 0;
+                Map<String, ItemStack> extras = new LinkedHashMap<>();
+                List<ItemStack> keep = new ArrayList<>();
+                ItemStack primaryTemplate = null;
+                for (ItemStack stack : natural) {
+                    String key = MineManager.getItemStackDrop(stack);
+                    if (drop.equals(key)) {
+                        fromDrops += stack.getAmount();
+                        if (primaryTemplate == null) primaryTemplate = stack.clone();
+                    } else if (key != null && !preferAutoSmelt && !stack.hasItemMeta()) {
+                        extras.merge(key, stack.clone(), (a, b) -> {
+                            a.setAmount(a.getAmount() + b.getAmount());
+                            return a;
+                        });
+                    } else {
+                        keep.add(stack);
+                    }
+                }
+                if (fromDrops == 0) {
+                    // Config maps this block to an item it doesn't vanilla-drop: keep the original behaviour.
+                    extras.clear();
+                    keep.clear();
+                }
+                int baseAmount = fromDrops > 0 ? fromDrops : getDropAmount(block, hand);
                 int amount;
                 Enchantment fortune = XEnchantment.FORTUNE.get();
                 if (hand == null || hand.getType().name().equals("AIR") || hand.getAmount() <= 0 || fortune == null
                         || !hand.containsEnchantment(fortune)) {
-                    amount = getDropAmount(block, hand);
+                    amount = baseAmount;
                 } else {
                     if (AutoPickupCache.isFortuneWhitelisted(block.getType().name())) {
-                        int base = getDropAmount(block, hand);
+                        int base = baseAmount;
                         amount = Number.getRandomInteger(base,
                                 base + hand.getEnchantmentLevel(fortune) + 2);
                     } else {
-                        amount = getDropAmount(block, hand);
+                        amount = baseAmount;
                     }
                 }
 
@@ -176,6 +208,7 @@ public class BlockBreak implements Listener {
                 }
                 int totalAmount = amount + bonusAmount;
 
+                int storedBefore = MineManager.getPlayerBlock(p, drop);
                 boolean stored = MineManager.addBlockAmount(p, drop, totalAmount);
                 specialStored = stored;
                 if (stored) {
@@ -186,7 +219,7 @@ public class BlockBreak implements Listener {
                         String name = File.getConfig().getString("items." + drop);
                         String itemName = name != null ? name : drop.replace("_", " ");
                         String suffix = bonusAmount > 0 ? " (+" + bonusAmount + " bonus)" : "";
-                        int newStoredAmount = MineManager.getPlayerBlock(p, drop);
+                        int newStoredAmount = MineManager.getTotalStoredInt(p);
                         int maxStorage = MineManager.getMaxBlock(p);
                         NotificationQueue.add(p, NotificationQueue.TYPE_STORAGE, drop, itemName,
                                 totalAmount, suffix, newStoredAmount, maxStorage,
@@ -195,6 +228,18 @@ public class BlockBreak implements Listener {
 
                     if (CAN_DISABLE_DROPS) {
                         e.setDropItems(false);
+                        Location where = block.getLocation().add(0.5, 0.5, 0.5);
+                        // A nearly full storage only takes what fits; the rest must stay in the world.
+                        int taken = Math.max(0, MineManager.getPlayerBlock(p, drop) - storedBefore);
+                        if (taken < amount && primaryTemplate != null) {
+                            dropAmount(where, primaryTemplate, amount - taken);
+                        }
+                        for (Map.Entry<String, ItemStack> extra : extras.entrySet()) {
+                            storeExtraDrop(p, where, extra.getKey(), extra.getValue());
+                        }
+                        for (ItemStack stack : keep) {
+                            dropAmount(where, stack, stack.getAmount());
+                        }
                     }
                 } else {
                     StorageFullNotificationManager.sendStorageFullNotification(p);
@@ -285,32 +330,64 @@ public class BlockBreak implements Listener {
         }
     }
 
+    private List<ItemStack> collectDrops(Block block, ItemStack tool) {
+        List<ItemStack> result = new ArrayList<>();
+        if (block == null) {
+            return result;
+        }
+        Collection<ItemStack> drops;
+        if (tool == null) {
+            drops = block.getDrops();
+        } else {
+            try {
+                drops = block.getDrops(tool);
+            } catch (Exception ignored) {
+                drops = block.getDrops();
+            }
+        }
+        for (ItemStack itemStack : drops) {
+            if (itemStack != null && itemStack.getType() != Material.AIR && itemStack.getAmount() > 0) {
+                result.add(itemStack);
+            }
+        }
+        return result;
+    }
+
+    // Stores one extra drop (e.g. wheat seeds next to wheat) when the player's storage accepts it
+    // (auto-pickup on, in the filter, free space); whatever is not stored is dropped back unchanged.
+    private void storeExtraDrop(Player p, Location where, String key, ItemStack stack) {
+        int amount = stack.getAmount();
+        int taken = 0;
+        if (MineManager.isAutoPickupEnabledForItem(p, key)) {
+            int before = MineManager.getPlayerBlock(p, key);
+            if (MineManager.addBlockAmount(p, key, amount)) {
+                taken = Math.max(0, MineManager.getPlayerBlock(p, key) - before);
+            }
+        }
+        if (taken < amount) {
+            dropAmount(where, stack, amount - taken);
+        }
+    }
+
+    private void dropAmount(Location where, ItemStack template, int amount) {
+        int remaining = amount;
+        int max = Math.max(1, template.getMaxStackSize());
+        while (remaining > 0 && where.getWorld() != null) {
+            ItemStack part = template.clone();
+            part.setAmount(Math.min(max, remaining));
+            where.getWorld().dropItemNaturally(where, part);
+            remaining -= part.getAmount();
+        }
+    }
+
     private int getDropAmount(Block block, ItemStack tool) {
         if (block == null) {
             return 0;
         }
 
         int amount = 0;
-        if (tool == null) {
-            for (ItemStack itemStack : block.getDrops()) {
-                if (itemStack != null) {
-                    amount += itemStack.getAmount();
-                }
-            }
-        } else {
-            try {
-                for (ItemStack itemStack : block.getDrops(tool)) {
-                    if (itemStack != null) {
-                        amount += itemStack.getAmount();
-                    }
-                }
-            } catch (Exception ignored) {
-                for (ItemStack itemStack : block.getDrops()) {
-                    if (itemStack != null) {
-                        amount += itemStack.getAmount();
-                    }
-                }
-            }
+        for (ItemStack itemStack : collectDrops(block, tool)) {
+            amount += itemStack.getAmount();
         }
 
         if (amount > 0) {
@@ -416,7 +493,7 @@ public class BlockBreak implements Listener {
         if (actionBarEnabled || titleEnabled) {
             String name = File.getConfig().getString("items." + dropKey);
             String itemName = name != null ? name : dropKey.replace("_", " ");
-            int newStoredAmount = MineManager.getPlayerBlock(player, dropKey);
+            int newStoredAmount = MineManager.getTotalStoredInt(player);
             int maxStorage = MineManager.getMaxBlock(player);
             NotificationQueue.add(player, NotificationQueue.TYPE_STORAGE, dropKey, itemName,
                     amount, "", newStoredAmount, maxStorage, actionBarEnabled, titleEnabled);

@@ -2,10 +2,7 @@ package net.danh.storage.Utils;
 
 import com.tchristofferson.configupdater.ConfigUpdater;
 import net.danh.storage.Manager.ConvertOreManager;
-import net.danh.storage.Manager.Crop.CropStorageManager;
 import net.danh.storage.Manager.MineManager;
-import net.danh.storage.Manager.Mob.MobStorageManager;
-import net.danh.storage.Manager.Mythic.MythicStorageManager;
 import net.danh.storage.Manager.SpecialMaterial.SpecialMaterialManager;
 import net.danh.storage.Storage;
 import net.xconfig.bukkit.model.SimpleConfigurationManager;
@@ -168,14 +165,6 @@ public class File {
         return getFileSetting().get("GUI/view-storage.yml");
     }
 
-    public static FileConfiguration getMythicStorageGUIConfig() {
-        return getFileSetting().get("GUI/mythicstorage.yml");
-    }
-
-    public static FileConfiguration getViewMythicStorageGUIConfig() {
-        return getFileSetting().get("GUI/view-mythicstorage.yml");
-    }
-
     public static FileConfiguration getEventConfig() {
         return getFileSetting().get("events.yml");
     }
@@ -186,58 +175,6 @@ public class File {
 
     public static FileConfiguration getSpecialMaterialConfig() {
         return getFileSetting().get("special_material.yml");
-    }
-
-    public static FileConfiguration getMythicStorageConfig() {
-        return getFileSetting().get("mythicstorage.yml");
-    }
-
-    public static FileConfiguration getCropStorageConfig() {
-        return getFileSetting().get("cropstorage.yml");
-    }
-
-    public static FileConfiguration getMobStorageConfig() {
-        return getFileSetting().get("mobstorage.yml");
-    }
-
-    public static FileConfiguration getMobStorageGUIConfig() {
-        return getFileSetting().get("GUI/mobstorage.yml");
-    }
-
-    public static FileConfiguration getMobItemStorageGUIConfig() {
-        return getFileSetting().get("GUI/mob-items.yml");
-    }
-
-    public static FileConfiguration getViewMobStorageGUIConfig() {
-        return getFileSetting().get("GUI/view-mobstorage.yml");
-    }
-
-    public static FileConfiguration getMobTransferGUIConfig() {
-        return getFileSetting().get("GUI/mob-transfer.yml");
-    }
-
-    public static FileConfiguration getMobTransferMultiGUIConfig() {
-        return getFileSetting().get("GUI/mob-transfer-multi.yml");
-    }
-
-    public static FileConfiguration getCropStorageGUIConfig() {
-        return getFileSetting().get("GUI/cropstorage.yml");
-    }
-
-    public static FileConfiguration getCropItemStorageGUIConfig() {
-        return getFileSetting().get("GUI/crop-items.yml");
-    }
-
-    public static FileConfiguration getViewCropStorageGUIConfig() {
-        return getFileSetting().get("GUI/view-cropstorage.yml");
-    }
-
-    public static FileConfiguration getCropTransferGUIConfig() {
-        return getFileSetting().get("GUI/crop-transfer.yml");
-    }
-
-    public static FileConfiguration getCropTransferMultiGUIConfig() {
-        return getFileSetting().get("GUI/crop-transfer-multi.yml");
     }
 
     public static FileConfiguration getFriendStorageConfig() {
@@ -273,8 +210,8 @@ public class File {
         return getFileSetting().get("GUI/material-editor.yml");
     }
 
-    public static FileConfiguration getMythicMaterialSelectionGUIConfig() {
-        return getFileSetting().get("GUI/mythic-material-selection.yml");
+    public static FileConfiguration getStorageToolsConfig() {
+        return getFileSetting().get("GUI/storage-tools.yml");
     }
 
     public static FileConfiguration getConfirmationGUIConfig() {
@@ -283,60 +220,53 @@ public class File {
 
     public static void loadFiles() {
         getFileSetting().build("", false, "config.yml", "message.yml", "events.yml", "enchants.yml",
-                "special_material.yml", "mythicstorage.yml", "cropstorage.yml", "crafting.yml",
-                "friendstorage.yml", "mobstorage.yml");
+                "special_material.yml", "crafting.yml",
+                "friendstorage.yml");
         copyExampleFiles();
         AutoPickupCache.reload();
     }
 
     public static void reloadFiles() {
         getFileSetting().reload("config.yml", "message.yml", "events.yml", "enchants.yml", "special_material.yml",
-                "mythicstorage.yml", "cropstorage.yml", "crafting.yml", "friendstorage.yml", "mobstorage.yml",
-                "GUI/storage.yml", "GUI/items.yml",
+                "crafting.yml", "friendstorage.yml", "GUI/storage.yml", "GUI/items.yml",
                 "GUI/transfer.yml", "GUI/transfer-multi.yml", "GUI/convert-ore.yml", "GUI/view-storage.yml",
-                "GUI/mythicstorage.yml", "GUI/view-mythicstorage.yml", "GUI/cropstorage.yml",
-                "GUI/view-cropstorage.yml", "GUI/crop-items.yml", "GUI/crop-transfer.yml",
-                "GUI/crop-transfer-multi.yml",
-                "GUI/mobstorage.yml", "GUI/mob-items.yml", "GUI/view-mobstorage.yml", "GUI/mob-transfer.yml",
-                "GUI/mob-transfer-multi.yml",
-                "GUI/mythictransfer.yml", "GUI/mythictransfer-multi.yml",
                 "GUI/recipe-list.yml", "GUI/recipe-editor.yml", "GUI/recipe-editor-list.yml",
-                "GUI/material-selection.yml", "GUI/material-editor.yml", "GUI/mythic-material-selection.yml",
-                "GUI/confirmation.yml");
+                "GUI/material-selection.yml", "GUI/material-editor.yml", "GUI/confirmation.yml", "GUI/storage-tools.yml");
         for (Player p : Bukkit.getOnlinePlayers()) {
             MineManager.savePlayerData(p);
             MineManager.loadPlayerData(p);
-
-            if (MythicStorageManager.isSystemEnabled()) {
-                MythicStorageManager.savePlayerData(p);
-                MythicStorageManager.loadPlayerData(p);
-            }
-
-            if (CropStorageManager.isSystemEnabled()) {
-                CropStorageManager.savePlayerData(p);
-                CropStorageManager.loadPlayerData(p);
-            }
-
-            if (MobStorageManager.isSystemEnabled()) {
-                MobStorageManager.savePlayerData(p);
-                MobStorageManager.loadPlayerData(p);
-            }
         }
         ConvertOreManager.loadConvertOptions();
         SpecialMaterialManager.loadSpecialMaterials();
         AutoPickupCache.reload();
     }
 
+    /**
+     * The redesigned main GUI adds new buttons. An older GUI/storage.yml (no pickup_filter button, or still a groundstore button) is moved aside
+     * as storage.yml.old and replaced by the new default; customised files are never lost.
+     */
+    private static void upgradeStorageGui() {
+        java.io.File gui = new java.io.File(Storage.getStorage().getDataFolder(), "GUI/storage.yml");
+        YamlConfiguration current = gui.isFile() ? YamlConfiguration.loadConfiguration(gui) : null;
+        if (current == null || (current.contains("items.pickup_filter") && !current.contains("items.groundstore_item"))) {
+            return;
+        }
+        try {
+            java.nio.file.Files.move(gui.toPath(), new java.io.File(gui.getParentFile(), "storage.yml.old").toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Storage.getStorage().saveResource("GUI/storage.yml", false);
+            Storage.getStorage().getLogger().warning("GUI/storage.yml upgraded to the new layout; the old file was kept as GUI/storage.yml.old");
+        } catch (java.io.IOException e) {
+            Storage.getStorage().getLogger().warning("Could not upgrade GUI/storage.yml: " + e.getMessage());
+        }
+    }
+
     public static void loadGUI() {
+        upgradeStorageGui();
         getFileSetting().build("", false, "GUI/storage.yml", "GUI/items.yml", "GUI/transfer.yml",
-                "GUI/transfer-multi.yml", "GUI/convert-ore.yml", "GUI/view-storage.yml", "GUI/mythicstorage.yml",
-                "GUI/view-mythicstorage.yml", "GUI/cropstorage.yml", "GUI/view-cropstorage.yml",
-                "GUI/crop-items.yml", "GUI/crop-transfer.yml", "GUI/crop-transfer-multi.yml",
-                "GUI/mobstorage.yml", "GUI/mob-items.yml", "GUI/view-mobstorage.yml", "GUI/mob-transfer.yml",
-                "GUI/mob-transfer-multi.yml",
-                "GUI/mythictransfer.yml", "GUI/mythictransfer-multi.yml", "GUI/recipe-list.yml",
+                "GUI/transfer-multi.yml", "GUI/convert-ore.yml", "GUI/view-storage.yml", "GUI/recipe-list.yml",
                 "GUI/recipe-editor.yml", "GUI/recipe-editor-list.yml", "GUI/material-selection.yml",
-                "GUI/material-editor.yml", "GUI/mythic-material-selection.yml", "GUI/confirmation.yml");
+                "GUI/material-editor.yml", "GUI/confirmation.yml", "GUI/storage-tools.yml");
     }
 
     public static void updateConfig() {
@@ -367,27 +297,6 @@ public class File {
                 "special_materials_version",
                 "special materials config");
         SpecialMaterialManager.loadSpecialMaterials();
-    }
-
-    public static void updateMythicStorageConfig() {
-        updateVersionedConfig(
-                "mythicstorage.yml",
-                "mythicstorage_version",
-                "mythicstorage config");
-    }
-
-    public static void updateCropStorageConfig() {
-        updateVersionedConfig(
-                "cropstorage.yml",
-                "cropstorage_version",
-                "cropstorage config");
-    }
-
-    public static void updateMobStorageConfig() {
-        updateVersionedConfig(
-                "mobstorage.yml",
-                "mobstorage_version",
-                "mobstorage config");
     }
 
     public static void updateFriendStorageConfig() {

@@ -1,0 +1,145 @@
+# Menus opened from the main storage: sort menu (Book), auto-pickup filter (Hopper), upgrade (Copper Golem).
+# Every empty slot of these menus is filled with the decoration item below (no tooltip, cannot be moved).
+decorates:
+  material: BLACK_STAINED_GLASS_PANE
+  name: "&r"
+  hide-tooltip: true
+  amount: 1
+
+sort:
+  title: "&0Sort Items"
+  size: 3
+  # Shown in each mode button (#status#)
+  status_selected: "&a✔ Selected"
+  status_unselected: "&7Click to select"
+  modes:
+    TYPE:
+      slot: 10
+      material: CHEST
+      name: "&eBy item type"
+      lore:
+        - "&7Groups items by their material."
+        - ""
+        - "#status#"
+    NAME_ASC:
+      slot: 11
+      material: NAME_TAG
+      name: "&eBy name (A → Z)"
+      lore:
+        - "&7Alphabetical order."
+        - ""
+        - "#status#"
+    NAME_DESC:
+      slot: 12
+      material: NAME_TAG
+      name: "&eBy name (Z → A)"
+      lore:
+        - "&7Reverse alphabetical order."
+        - ""
+        - "#status#"
+    AMOUNT:
+      slot: 13
+      material: HOPPER
+      name: "&eBy amount (most first)"
+      lore:
+        - "&7Items you own the most of come first."
+        - ""
+        - "#status#"
+    INSERTION:
+      slot: 14
+      material: CLOCK
+      name: "&eBy time added"
+      lore:
+        - "&7The order items first entered your storage."
+        - ""
+        - "#status#"
+  back:
+    slot: 22
+    material: ARROW
+    name: "&cBack"
+    lore:
+      - "&7Return to the storage."
+
+filter:
+  title: "&0Auto-pickup Filter"
+  size: 6
+  # Item slots (one page) and controls
+  item_slots: "10,11,12,13,14,15,16,19,20,21,22,23,24,25,28,29,30,31,32,33,34,37,38,39,40,41,42,43"
+  item:
+    lore:
+      - ""
+      - "#status#"
+      - ""
+      - "&7Click to add/remove this item"
+    status_in: "&a✔ In the filter"
+    status_out: "&7✘ Not in the filter"
+    amount: 1
+  # Name template of every item (material comes from the storage item itself)
+  info:
+    slot: 4
+    material: HOPPER
+    name: "&6Auto-pickup Filter"
+    lore:
+      - ""
+      - "&7Filter is empty: &fall storage items &7are picked up."
+      - "&7Filter has items: &fonly the listed items &7are picked up."
+      - ""
+      - "&7Items in the filter: &e#count#"
+  clear:
+    slot: 48
+    material: BARRIER
+    name: "&cClear filter"
+    lore:
+      - "&7Remove every item: pick up everything again."
+  back:
+    slot: 49
+    material: ARROW
+    name: "&cBack"
+    lore:
+      - "&7Return to the storage."
+  previous_page:
+    slot: 45
+    material: ARROW
+    name: "&ePrevious page"
+    lore:
+      - "&7Page #current_page#/#total_pages#"
+  next_page:
+    slot: 53
+    material: ARROW
+    name: "&eNext page"
+    lore:
+      - "&7Page #current_page#/#total_pages#"
+
+upgrade:
+  title: "&0Upgrade Storage"
+  size: 3
+  info:
+    slot: 11
+    material: CHEST
+    name: "&6Storage capacity"
+    lore:
+      - ""
+      - "&7Level: &e#level#&7/&e#max_level#"
+      - "&7Capacity: &e#capacity#"
+      - "&7Used: &e#used#"
+  upgrade:
+    slot: 13
+    material: EMERALD
+    name: "&aUpgrade"
+    lore:
+      - ""
+      - "&7Next level: &e#next_level#"
+      - "&7Capacity: &e#capacity# &7→ &a#next_capacity#"
+      - "&7Cost: &e#cost#"
+      - ""
+      - "#status#"
+    status_available: "&aClick to upgrade"
+    status_max: "&cMaximum level reached"
+    status_owner: "&cOnly the island owner can upgrade"
+    status_disabled: "&cUpgrades are disabled"
+  back:
+    slot: 22
+    material: ARROW
+    name: "&cBack"
+    lore:
+      - "&7Return to the storage."

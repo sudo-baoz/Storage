@@ -44,9 +44,6 @@ public class MineManager {
             "storage.storage.max.";
     private static final HashMap<String, Set<String>> disabledAutoPickupItems =
             new HashMap<>();
-    private static final HashMap<UUID, Boolean> groundStoreToggle =
-            new HashMap<>();
-    private static final String GROUND_STORE_DATA_PREFIX = ";groundstore:";
     private static final String TOGGLE_DATA_PREFIX = ";toggle:";
     private static final String MAX_OVERRIDE_DATA_PREFIX = ";maxoverride:";
     private static final String AUTO_SELL_DATA_PREFIX = ";autosell:";
@@ -326,15 +323,57 @@ public class MineManager {
         maxOverrideData.remove(player.getUniqueId());
     }
 
+    /**
+     * Total capacity (all items together) of the storage this player uses: the configured/admin value or the
+     * capacity of the purchased upgrade level, whichever is higher.
+     */
     public static int getMaxBlock(Player p) {
+        int base = File.getConfig().getInt("settings.default_max_storage", 100000);
         if (p == null) {
-            return File.getConfig().getInt("settings.default_max_storage",
-                    100000);
+            return base;
         }
-        return playermaxdata.getOrDefault(p.getUniqueId(), File.getConfig().getInt(
-                "settings.default_max_storage",
-                100000
-        ));
+        base = playermaxdata.getOrDefault(p.getUniqueId(), base);
+        return Math.max(base, StorageUpgrade.capacity(StorageSettings.getLevel(storageKey(p))));
+    }
+
+    /**
+     * Sum of every item in the storage. long: many items with large amounts must not overflow an int.
+     */
+    public static long getTotalStored(@NotNull String key) {
+        long total = 0;
+        // blocksdata maps many blocks to one drop (STONE and COBBLESTONE -> COBBLESTONE;0): count each item once.
+        for (String block : new HashSet<>(blocksdata.values())) {
+            total += playerdata.getOrDefault(key + "_" + block, 0);
+        }
+        return total;
+    }
+
+    /**
+     * Free capacity of another player's storage, online or not (their data must already be loaded).
+     */
+    public static int getFreeSpace(@NotNull String ownerName, @Nullable UUID ownerUuid) {
+        String key = resolveStorageName(ownerName);
+        Player online = ownerUuid == null ? null : Bukkit.getPlayer(ownerUuid);
+        int max = online != null ? getMaxBlock(online)
+                : Math.max(ownerUuid != null ? getMaxStorage(ownerUuid) : getMaxStorage(),
+                StorageUpgrade.capacity(StorageSettings.getLevel(key)));
+        return (int) Math.max(0L, Math.min(Integer.MAX_VALUE, (long) max - getTotalStored(key)));
+    }
+
+    public static int getTotalStoredInt(@NotNull Player p) {
+        return (int) Math.min(Integer.MAX_VALUE, getTotalStored(p));
+    }
+
+    public static long getTotalStored(@NotNull Player p) {
+        return getTotalStored(storageKey(p));
+    }
+
+    /**
+     * Free capacity; 0 when the storage is full or already over the limit (old data is never cut).
+     * Every add path must use this single check.
+     */
+    public static int getFreeSpace(@NotNull Player p) {
+        return (int) Math.max(0L, Math.min(Integer.MAX_VALUE, (long) getMaxBlock(p) - getTotalStored(p)));
     }
 
     @Contract(" -> new")
@@ -405,38 +444,6 @@ public class MineManager {
         return playerStats;
     }
 
-    public static boolean isGroundStoreSystemEnabled() {
-        return File.getConfig().getBoolean("ground_store.enabled", true);
-    }
-
-    public static boolean isGroundStoreEnabled(@NotNull Player player) {
-        if (!isGroundStoreSystemEnabled()) {
-            return false;
-        }
-        UUID playerId = player.getUniqueId();
-        Boolean status = groundStoreToggle.get(playerId);
-        if (status == null) {
-            PlayerData playerData = getPlayerDatabase(player);
-            status = parseGroundStoreStatus(playerData.data());
-            if (status == null) {
-                status = File.getConfig().getBoolean(
-                        "ground_store.default_enabled",
-                        false
-                );
-            }
-            groundStoreToggle.put(playerId, status);
-        }
-        return status;
-    }
-
-    public static boolean toggleGroundStore(@NotNull Player player) {
-        boolean current = isGroundStoreEnabled(player);
-        boolean next = !current;
-        groundStoreToggle.put(player.getUniqueId(), next);
-        savePlayerData(player);
-        return next;
-    }
-
     public static boolean setItemAutoSell(@NotNull Player player,
                                           @NotNull String material,
                                           boolean enabled) {
@@ -490,20 +497,6 @@ public class MineManager {
         }
 
         return cleared;
-    }
-
-    public static boolean isGroundStoreItemAllowed(@NotNull String dropKey) {
-        if (!getPluginBlocks().contains(dropKey)) {
-            return false;
-        }
-
-        List<String> allowed = File.getConfig().getStringList(
-                "ground_store.allowed_items"
-        );
-        if (allowed == null || allowed.isEmpty()) {
-            return false;
-        }
-        return allowed.contains(dropKey);
     }
 
     private static @NotNull String createNewData() {
@@ -565,6 +558,7 @@ public class MineManager {
             mapAsString.delete(mapAsString.length() - 2, mapAsString.length());
         }
         mapAsString.append("}");
+        mapAsString.append(StorageSettings.serialize(storageKey(p)));
 
         Set<String> disabledItems = disabledAutoPickupItems.get(storageKey(p));
         if (disabledItems != null && !disabledItems.isEmpty()) {
@@ -600,12 +594,6 @@ public class MineManager {
                 mapAsString.append(AUTO_SELL_DATA_PREFIX)
                         .append(enabledData);
             }
-        }
-
-        UUID playerId = p.getUniqueId();
-        if (groundStoreToggle.containsKey(playerId)) {
-            mapAsString.append(GROUND_STORE_DATA_PREFIX)
-                    .append(groundStoreToggle.get(playerId));
         }
 
         mapAsString.append(TOGGLE_DATA_PREFIX)
@@ -649,6 +637,10 @@ public class MineManager {
     public static boolean isAutoPickupEnabledForItem(@NotNull Player player,
                                                      @NotNull String material) {
         if (!getToggleStatus(player)) {
+            return false;
+        }
+        // An empty pickup filter means "everything"; a non-empty one lists the only items picked up.
+        if (!StorageSettings.isFiltered(storageKey(player), material)) {
             return false;
         }
         Set<String> disabledItems = disabledAutoPickupItems.get(storageKey(player));
@@ -726,10 +718,9 @@ public class MineManager {
         if (amount <= 0 || !blocksdata.containsKey(material)) return false;
 
         int currentAmount = getPlayerBlock(p, material);
-        int maxStorage = getMaxBlock(p);
-        if (currentAmount >= maxStorage) return false;
+        int availableSpace = getFreeSpace(p);
+        if (availableSpace <= 0) return false;
 
-        int availableSpace = maxStorage - currentAmount;
         int amountToAdd = Math.min(amount, availableSpace);
         if (amountToAdd <= 0) return false;
 
@@ -743,6 +734,7 @@ public class MineManager {
         }
 
         playerdata.put(storageKey(p) + "_" + material, currentAmount + amountToAdd);
+        StorageSettings.noteAdded(storageKey(p), material);
 
         if (fireEvent) {
             StorageHookAPI.callAfterDeposit(p, material, amountToAdd);
@@ -1062,6 +1054,7 @@ public class MineManager {
 
         if (firstLoad) {
             setBlock(p, list);
+            StorageSettings.load(key, playerData.data());
         }
 
         String rawData = playerData.data();
@@ -1077,11 +1070,6 @@ public class MineManager {
             } else {
                 clearMaxStorageOverride(p);
             }
-            Boolean groundStatus = parseGroundStoreStatus(rawData);
-            if (groundStatus != null) {
-                groundStoreToggle.put(p.getUniqueId(), groundStatus);
-            }
-
             Boolean toggleStatus = parseToggleStatus(rawData);
             if (toggleStatus != null) {
                 toggle.put(p.getUniqueId(), toggleStatus);
@@ -1090,13 +1078,6 @@ public class MineManager {
 
         if (!toggle.containsKey(p.getUniqueId())) {
             toggle.put(p.getUniqueId(), playerData.autoPickup());
-        }
-
-        if (!groundStoreToggle.containsKey(p.getUniqueId())) {
-            groundStoreToggle.put(p.getUniqueId(), File.getConfig().getBoolean(
-                    "ground_store.default_enabled",
-                    false
-            ));
         }
 
         int resolvedMax;
@@ -1144,7 +1125,6 @@ public class MineManager {
         toggle.remove(playerId);
         playermaxdata.remove(playerId);
         clearMaxStorageOverride(p);
-        groundStoreToggle.remove(playerId);
 
         String playerName = storageKey(p);
         activeKey.remove(playerId);
@@ -1153,6 +1133,7 @@ public class MineManager {
             playerdata.entrySet().removeIf(entry -> entry.getKey().startsWith(playerName + "_"));
             disabledAutoPickupItems.remove(playerName);
             autoSellItems.remove(playerName);
+            StorageSettings.remove(playerName);
         }
 
         String prefix = p.getUniqueId() + "_";
@@ -1162,24 +1143,6 @@ public class MineManager {
         synchronized (lastAutoSellAt) {
             lastAutoSellAt.keySet().removeIf(key -> key != null && key.startsWith(prefix));
         }
-    }
-
-    private static Boolean parseGroundStoreStatus(String data) {
-        if (data == null || data.isEmpty()) {
-            return null;
-        }
-        int idx = data.indexOf(GROUND_STORE_DATA_PREFIX);
-        if (idx < 0) {
-            return null;
-        }
-        int start = idx + GROUND_STORE_DATA_PREFIX.length();
-        int end = data.indexOf(';', start);
-        String raw = end >= 0 ? data.substring(start, end) : data.substring(start);
-        raw = raw.trim().toLowerCase(Locale.ROOT);
-        if (raw.isEmpty()) {
-            return null;
-        }
-        return "true".equals(raw);
     }
 
     private static Integer parseMaxOverride(String data) {
@@ -1264,9 +1227,7 @@ public class MineManager {
             return 0;
         }
 
-        int receiverMaxStorage = getMaxBlock(receiver);
-        int receiverCurrentAmount = getPlayerBlock(receiver, material);
-        int availableSpace = receiverMaxStorage - receiverCurrentAmount;
+        int availableSpace = getFreeSpace(receiver);
 
         return Math.min(senderAmount, Math.max(0, availableSpace));
     }
@@ -1540,6 +1501,7 @@ public class MineManager {
         if (rawData != null && !rawData.isEmpty()) {
             loadDisabledAutoPickupItems(storageName, rawData);
         }
+        StorageSettings.load(storageName, rawData);
 
         List<String> list = convertOnlineData(data.data());
         for (String block : list) {
@@ -1569,6 +1531,7 @@ public class MineManager {
         playerdata.entrySet().removeIf(entry -> entry.getKey().startsWith(storageName + "_"));
         disabledAutoPickupItems.remove(storageName);
         autoSellItems.remove(storageName);
+        StorageSettings.remove(storageName);
     }
 
     public static int getPlayerItem(@NotNull String playerName, @NotNull String material) {
@@ -1579,6 +1542,7 @@ public class MineManager {
         if (amount <= 0) return;
         int current = getPlayerBlock(playerName, material);
         playerdata.put(resolveStorageName(playerName) + "_" + material, current + amount);
+        StorageSettings.noteAdded(resolveStorageName(playerName), material);
     }
 
     public static void removeItemAmount(@NotNull String playerName, @NotNull String material, int amount) {

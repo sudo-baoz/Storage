@@ -197,22 +197,6 @@ public abstract class BaseCommand implements CommandHandler {
                 File.getConfig().getStringList("blacklist_world").contains(worldName);
     }
 
-    protected boolean isMythicStorageWorldBlacklisted(Player player) {
-        if (player == null)
-            return false;
-        String worldName = player.getWorld().getName();
-        return File.getMythicStorageConfig().contains("blacklist_world") &&
-                File.getMythicStorageConfig().getStringList("blacklist_world").contains(worldName);
-    }
-
-    protected boolean isCropStorageWorldBlacklisted(Player player) {
-        if (player == null)
-            return false;
-        String worldName = player.getWorld().getName();
-        return File.getCropStorageConfig().contains("blacklist_world") &&
-                File.getCropStorageConfig().getStringList("blacklist_world").contains(worldName);
-    }
-
     protected void sendWorldBlacklisted(CommandSender sender, String featureName, String worldName) {
         String[] placeholders = {"#feature#", "#world#"};
         String[] replacements = {featureName, worldName};

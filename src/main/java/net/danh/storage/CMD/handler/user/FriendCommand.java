@@ -2,11 +2,8 @@ package net.danh.storage.CMD.handler.user;
 
 import net.danh.storage.CMD.handler.BaseCommand;
 import net.danh.storage.Database.FriendDatabase;
-import net.danh.storage.Manager.Crop.CropStorageManager;
 import net.danh.storage.Manager.Friend.FriendManager;
 import net.danh.storage.Manager.MineManager;
-import net.danh.storage.Manager.Mythic.MythicStorageManager;
-import net.danh.storage.MythicMobs.MythicMobsHelper;
 import net.danh.storage.Storage;
 import net.danh.storage.Utils.ChatUtils;
 import net.danh.storage.Utils.File;
@@ -322,7 +319,7 @@ public class FriendCommand extends BaseCommand {
 
         if (args.length < 4) {
             sendMessage(player, "admin.invalid_usage", "#usage#",
-                    "/storage friends withdraw <friend> <storage|mythicstorage|cropstorage> <item> [amount|all]");
+                    "/storage friends withdraw <friend> <storage> <item> [amount|all]");
             return;
         }
 
@@ -403,7 +400,7 @@ public class FriendCommand extends BaseCommand {
 
         if (args.length < 4) {
             sendMessage(player, "admin.invalid_usage", "#usage#",
-                    "/storage friends deposit <friend> <storage|mythicstorage|cropstorage> <item> [amount|all] [hand]");
+                    "/storage friends deposit <friend> <storage> <item> [amount|all] [hand]");
             return;
         }
 
@@ -633,7 +630,7 @@ public class FriendCommand extends BaseCommand {
 
         if (args.length < 3) {
             sendMessage(player, "admin.invalid_usage", "#usage#",
-                    "/storage friends settings <storage|mythicstorage|cropstorage|all> <allow|deny> [deposit|withdraw|access|all]");
+                    "/storage friends settings <storage|all> <allow|deny> [deposit|withdraw|access|all]");
             return;
         }
 
@@ -739,10 +736,6 @@ public class FriendCommand extends BaseCommand {
         switch (storageType) {
             case "storage":
                 return executeStorageWithdraw(player, ownerUuid, ownerName, item, amount);
-            case "mythicstorage":
-                return executeMythicWithdraw(player, ownerUuid, ownerName, item, amount);
-            case "cropstorage":
-                return executeCropWithdraw(player, ownerUuid, ownerName, item, amount);
             default:
                 sendMessage(player, "friends.invalid_storage_type", "#type#", storageType);
                 return false;
@@ -753,10 +746,6 @@ public class FriendCommand extends BaseCommand {
         switch (storageType) {
             case "storage":
                 return executeStorageDeposit(player, ownerUuid, ownerName, item, amount);
-            case "mythicstorage":
-                return executeMythicDeposit(player, ownerUuid, ownerName, item, amount);
-            case "cropstorage":
-                return executeCropDeposit(player, ownerUuid, ownerName, item, amount);
             default:
                 sendMessage(player, "friends.invalid_storage_type", "#type#", storageType);
                 return false;
@@ -805,12 +794,7 @@ public class FriendCommand extends BaseCommand {
         }
 
         // Check owner storage space
-        int ownerCurrent = MineManager.getPlayerBlock(ownerName, normalizedMaterial);
-        Player ownerPlayer = Bukkit.getPlayer(ownerUuid);
-        int ownerMax = ownerPlayer != null
-                ? MineManager.getMaxBlock(ownerPlayer)
-                : MineManager.getMaxStorage(ownerUuid);
-        int availableSpace = ownerMax - ownerCurrent;
+        int availableSpace = MineManager.getFreeSpace(ownerName, ownerUuid);
 
         if (availableSpace < amount) {
             sendMessage(player, "friends.owner_storage_full",
@@ -829,145 +813,14 @@ public class FriendCommand extends BaseCommand {
         return true;
     }
 
-    private boolean executeMythicWithdraw(Player player, UUID ownerUuid, String ownerName, String item, int amount) {
-        int available = MythicStorageManager.getPlayerItem(ownerName, item);
 
-        if (available < amount) {
-            sendMessage(player, "friends.owner_not_enough",
-                    new String[]{"#player#", "#material#", "#available#"},
-                    new String[]{ownerName, item, String.valueOf(available)});
-            return false;
-        }
 
-        // Check inventory space
-        int freeSlots = calculateFreeSlots(player);
-        if (freeSlots < 1) {
-            sendMessage(player, "friends.inventory_full", "#slots#", "0");
-            return false;
-        }
 
-        // Execute withdraw - remove from owner, give to player
-        MythicStorageManager.removeItemAmount(ownerName, item, amount);
-        giveMythicItem(player, item, amount);
-
-        sendMessage(player, "friends.withdraw_success",
-                new String[]{"#amount#", "#material#", "#player#"},
-                new String[]{String.valueOf(amount), item, ownerName});
-        return true;
-    }
-
-    private boolean executeMythicDeposit(Player player, UUID ownerUuid, String ownerName, String item, int amount) {
-        // Check if player has the mythic item
-        int playerHas = countMythicItems(player, item);
-        if (playerHas < amount) {
-            sendMessage(player, "friends.not_enough_items",
-                    new String[]{"#material#", "#available#"},
-                    new String[]{item, String.valueOf(playerHas)});
-            return false;
-        }
-
-        // Check owner storage space
-        int ownerCurrent = MythicStorageManager.getPlayerItem(ownerName, item);
-        Player ownerPlayer = Bukkit.getPlayer(ownerUuid);
-        int ownerMax = ownerPlayer != null
-                ? MythicStorageManager.getMaxStorage(ownerPlayer)
-                : MythicStorageManager.getMaxStorage(ownerUuid);
-        int availableSpace = ownerMax - ownerCurrent;
-
-        if (availableSpace < amount) {
-            sendMessage(player, "friends.owner_storage_full",
-                    new String[]{"#player#", "#space#"},
-                    new String[]{ownerName, String.valueOf(availableSpace)});
-            return false;
-        }
-
-        // Execute deposit - remove from player, add to owner
-        removeMythicItems(player, item, amount);
-        MythicStorageManager.addItemAmount(ownerName, item, amount);
-
-        sendMessage(player, "friends.deposit_success",
-                new String[]{"#amount#", "#material#", "#player#"},
-                new String[]{String.valueOf(amount), item, ownerName});
-        return true;
-    }
-
-    private boolean executeCropWithdraw(Player player, UUID ownerUuid, String ownerName, String crop, int amount) {
-        String normalizedCrop = normalizeCrop(crop);
-        int available = CropStorageManager.getPlayerItem(ownerName, normalizedCrop);
-
-        if (available < amount) {
-            sendMessage(player, "friends.owner_not_enough",
-                    new String[]{"#player#", "#material#", "#available#"},
-                    new String[]{ownerName, crop, String.valueOf(available)});
-            return false;
-        }
-
-        // Check inventory space
-        int freeSlots = calculateFreeSlots(player);
-        if (freeSlots < amount) {
-            sendMessage(player, "friends.inventory_full", "#slots#", String.valueOf(freeSlots));
-            return false;
-        }
-
-        // Execute withdraw - remove from owner, give to player
-        CropStorageManager.removeItemAmount(ownerName, normalizedCrop, amount, false);
-        giveCropItem(player, normalizedCrop, amount);
-
-        sendMessage(player, "friends.withdraw_success",
-                new String[]{"#amount#", "#material#", "#player#"},
-                new String[]{String.valueOf(amount), crop, ownerName});
-        return true;
-    }
-
-    private boolean executeCropDeposit(Player player, UUID ownerUuid, String ownerName, String crop, int amount) {
-        String normalizedCrop = normalizeCrop(crop);
-
-        // Check if player has crops
-        int playerHas = countCropItems(player, normalizedCrop);
-        if (playerHas < amount) {
-            sendMessage(player, "friends.not_enough_items",
-                    new String[]{"#material#", "#available#"},
-                    new String[]{crop, String.valueOf(playerHas)});
-            return false;
-        }
-
-        // Check owner storage space
-        int ownerCurrent = CropStorageManager.getPlayerItem(ownerName, normalizedCrop);
-        int ownerMax = CropStorageManager.getMaxStorage(ownerName);
-        int availableSpace = ownerMax - ownerCurrent;
-
-        if (availableSpace < amount) {
-            sendMessage(player, "friends.owner_storage_full",
-                    new String[]{"#player#", "#space#"},
-                    new String[]{ownerName, String.valueOf(availableSpace)});
-            return false;
-        }
-
-        // Execute deposit - remove from player, add to owner
-        removeCropItems(player, normalizedCrop, amount);
-        CropStorageManager.addItemAmount(ownerName, normalizedCrop, amount, false);
-
-        sendMessage(player, "friends.deposit_success",
-                new String[]{"#amount#", "#material#", "#player#"},
-                new String[]{String.valueOf(amount), crop, ownerName});
-        return true;
-    }
 
     private int parseAmount(String amountStr, Player player, String item, String storageType) {
         if (amountStr.equalsIgnoreCase("all")) {
             // Normalize for storage type before counting
-            String normalizedItem;
-            if (storageType.equals("cropstorage")) {
-                normalizedItem = normalizeCrop(item);
-            } else if (storageType.equals("mythicstorage")) {
-                normalizedItem = item; // mythic items use internal name as-is
-            } else {
-                normalizedItem = normalizeMaterial(item);
-            }
-            if (storageType.equals("mythicstorage")) {
-                return countMythicItems(player, normalizedItem);
-            }
-            return countPlayerItems(player, normalizedItem);
+            return countPlayerItems(player, normalizeMaterial(item));
         }
         try {
             return Integer.parseInt(amountStr);
@@ -981,10 +834,6 @@ public class FriendCommand extends BaseCommand {
             switch (storageType) {
                 case "storage":
                     return MineManager.getPlayerBlock(ownerName, normalizeMaterial(item));
-                case "mythicstorage":
-                    return MythicStorageManager.getPlayerItem(ownerName, item);
-                case "cropstorage":
-                    return CropStorageManager.getPlayerItem(ownerName, normalizeCrop(item));
                 default:
                     return 0;
             }
@@ -1016,10 +865,6 @@ public class FriendCommand extends BaseCommand {
         switch (storageType) {
             case "storage":
                 return MineManager.getPlayerBlock(playerName, normalizeMaterial(item));
-            case "mythicstorage":
-                return MythicStorageManager.getPlayerItem(playerName, item);
-            case "cropstorage":
-                return CropStorageManager.getPlayerItem(playerName, normalizeCrop(item));
             default:
                 return 0;
         }
@@ -1030,10 +875,6 @@ public class FriendCommand extends BaseCommand {
         switch (storageType) {
             case "storage":
                 return executeStorageDepositFromStorage(player, ownerName, item, amount);
-            case "mythicstorage":
-                return executeMythicDepositFromStorage(player, ownerName, item, amount);
-            case "cropstorage":
-                return executeCropDepositFromStorage(player, ownerName, item, amount);
             default:
                 sendMessage(player, "friends.invalid_storage_type", "#type#", storageType);
                 return false;
@@ -1053,13 +894,7 @@ public class FriendCommand extends BaseCommand {
             return false;
         }
 
-        int ownerCurrent = MineManager.getPlayerBlock(ownerName, normalizedMaterial);
-        UUID ownerUuid = resolveUuid(ownerName);
-        Player ownerPlayer = ownerUuid != null ? Bukkit.getPlayer(ownerUuid) : null;
-        int ownerMax = ownerUuid != null
-                ? (ownerPlayer != null ? MineManager.getMaxBlock(ownerPlayer) : MineManager.getMaxStorage(ownerUuid))
-                : MineManager.getMaxStorage();
-        int availableSpace = ownerMax - ownerCurrent;
+        int availableSpace = MineManager.getFreeSpace(ownerName, resolveUuid(ownerName));
         if (availableSpace < amount) {
             sendMessage(player, "friends.owner_storage_full",
                     new String[]{"#player#", "#space#"},
@@ -1076,72 +911,7 @@ public class FriendCommand extends BaseCommand {
         return true;
     }
 
-    private boolean executeMythicDepositFromStorage(Player player, String ownerName,
-                                                    String item, int amount) {
-        String playerName = player.getName();
 
-        int playerHas = MythicStorageManager.getPlayerItem(playerName, item);
-        if (playerHas < amount) {
-            sendMessage(player, "friends.not_enough_in_storage",
-                    new String[]{"#material#", "#available#"},
-                    new String[]{item, String.valueOf(playerHas)});
-            return false;
-        }
-
-        int ownerCurrent = MythicStorageManager.getPlayerItem(ownerName, item);
-        UUID ownerUuid = resolveUuid(ownerName);
-        Player ownerPlayer = ownerUuid != null ? Bukkit.getPlayer(ownerUuid) : null;
-        int ownerMax = ownerUuid != null
-                ? (ownerPlayer != null ? MythicStorageManager.getMaxStorage(ownerPlayer) : MythicStorageManager.getMaxStorage(ownerUuid))
-                : MythicStorageManager.getMaxStorage();
-        int availableSpace = ownerMax - ownerCurrent;
-        if (availableSpace < amount) {
-            sendMessage(player, "friends.owner_storage_full",
-                    new String[]{"#player#", "#space#"},
-                    new String[]{ownerName, String.valueOf(availableSpace)});
-            return false;
-        }
-
-        MythicStorageManager.removeItemAmount(playerName, item, amount);
-        MythicStorageManager.addItemAmount(ownerName, item, amount);
-
-        sendMessage(player, "friends.deposit_from_storage_success",
-                new String[]{"#amount#", "#material#", "#player#"},
-                new String[]{String.valueOf(amount), item, ownerName});
-        return true;
-    }
-
-    private boolean executeCropDepositFromStorage(Player player, String ownerName,
-                                                  String crop, int amount) {
-        String normalizedCrop = normalizeCrop(crop);
-        String playerName = player.getName();
-
-        int playerHas = CropStorageManager.getPlayerItem(playerName, normalizedCrop);
-        if (playerHas < amount) {
-            sendMessage(player, "friends.not_enough_in_storage",
-                    new String[]{"#material#", "#available#"},
-                    new String[]{crop, String.valueOf(playerHas)});
-            return false;
-        }
-
-        int ownerCurrent = CropStorageManager.getPlayerItem(ownerName, normalizedCrop);
-        int ownerMax = CropStorageManager.getMaxStorage(ownerName);
-        int availableSpace = ownerMax - ownerCurrent;
-        if (availableSpace < amount) {
-            sendMessage(player, "friends.owner_storage_full",
-                    new String[]{"#player#", "#space#"},
-                    new String[]{ownerName, String.valueOf(availableSpace)});
-            return false;
-        }
-
-        CropStorageManager.removeItemAmount(playerName, normalizedCrop, amount, false);
-        CropStorageManager.addItemAmount(ownerName, normalizedCrop, amount, false);
-
-        sendMessage(player, "friends.deposit_from_storage_success",
-                new String[]{"#amount#", "#material#", "#player#"},
-                new String[]{String.valueOf(amount), crop, ownerName});
-        return true;
-    }
 
     private String normalizeMaterial(String material) {
         String normalized = material.replace(":", ";");
@@ -1151,21 +921,12 @@ public class FriendCommand extends BaseCommand {
         return normalized;
     }
 
-    private String normalizeCrop(String crop) {
-        return crop.toUpperCase();
-    }
 
 
     private void loadOfflineData(String playerName, String storageType) {
         switch (storageType) {
             case "storage":
                 MineManager.loadOfflinePlayerData(playerName);
-                break;
-            case "mythicstorage":
-                MythicStorageManager.loadOfflinePlayerData(playerName);
-                break;
-            case "cropstorage":
-                CropStorageManager.loadOfflinePlayerData(playerName);
                 break;
         }
     }
@@ -1183,22 +944,7 @@ public class FriendCommand extends BaseCommand {
         return count;
     }
 
-    private int countMythicItems(Player player, String internalName) {
-        int count = 0;
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null) {
-                String mythicName = MythicStorageManager.getMythicMobsHelper().getMythicItemInternalName(item);
-                if (internalName.equalsIgnoreCase(mythicName)) {
-                    count += item.getAmount();
-                }
-            }
-        }
-        return count;
-    }
 
-    private int countCropItems(Player player, String cropKey) {
-        return countPlayerItems(player, cropKey);
-    }
 
     private void removePlayerItems(Player player, String material, int amount) {
         ItemStack template = getItemStack(material);
@@ -1223,32 +969,7 @@ public class FriendCommand extends BaseCommand {
         inv.setContents(contents);
     }
 
-    private void removeMythicItems(Player player, String internalName, int amount) {
-        int toRemove = amount;
-        PlayerInventory inv = player.getInventory();
-        ItemStack[] contents = inv.getContents();
 
-        for (int i = 0; i < contents.length && toRemove > 0; i++) {
-            ItemStack item = contents[i];
-            if (item != null) {
-                String mythicName = MythicStorageManager.getMythicMobsHelper().getMythicItemInternalName(item);
-                if (internalName.equalsIgnoreCase(mythicName)) {
-                    if (item.getAmount() <= toRemove) {
-                        toRemove -= item.getAmount();
-                        contents[i] = null;
-                    } else {
-                        item.setAmount(item.getAmount() - toRemove);
-                        toRemove = 0;
-                    }
-                }
-            }
-        }
-        inv.setContents(contents);
-    }
-
-    private void removeCropItems(Player player, String cropKey, int amount) {
-        removePlayerItems(player, cropKey, amount);
-    }
 
     private void addItemsToInventory(Player player, String material, int amount) {
         ItemStack template = getItemStack(material);
@@ -1264,16 +985,7 @@ public class FriendCommand extends BaseCommand {
         }
     }
 
-    private void giveMythicItem(Player player, String internalName, int amount) {
-        ItemStack mythicItem = MythicMobsHelper.getMythicItemStack(internalName, amount);
-        if (mythicItem != null) {
-            player.getInventory().addItem(mythicItem);
-        }
-    }
 
-    private void giveCropItem(Player player, String cropKey, int amount) {
-        addItemsToInventory(player, cropKey, amount);
-    }
 
     private ItemStack getItemStack(String material) {
         return MaterialUtils.createItem(material);
@@ -1392,8 +1104,6 @@ public class FriendCommand extends BaseCommand {
                 case "settings":
                     List<String> settingsOptions = new ArrayList<>();
                     settingsOptions.add("storage");
-                    settingsOptions.add("mythicstorage");
-                    settingsOptions.add("cropstorage");
                     settingsOptions.add("all");
                     settingsOptions.add("help");
                     StringUtil.copyPartialMatches(args[1], settingsOptions, completions);
@@ -1466,30 +1176,6 @@ public class FriendCommand extends BaseCommand {
                         String display = material.split(";")[0];
                         if (amount > 0 && display.toLowerCase().startsWith(normalizedPartial)) {
                             items.add(display);
-                            if (items.size() >= 80) return new ArrayList<>(items);
-                        }
-                    }
-                }
-                break;
-            case "mythicstorage":
-                for (String key : new ArrayList<>(MythicStorageManager.playerdata.keySet())) {
-                    if (key.startsWith(ownerName + "_")) {
-                        String material = key.substring(ownerName.length() + 1);
-                        int amount = MythicStorageManager.playerdata.getOrDefault(key, 0);
-                        if (amount > 0 && material.toLowerCase().startsWith(normalizedPartial)) {
-                            items.add(material);
-                            if (items.size() >= 80) return new ArrayList<>(items);
-                        }
-                    }
-                }
-                break;
-            case "cropstorage":
-                for (String key : new ArrayList<>(CropStorageManager.playerdata.keySet())) {
-                    if (key.startsWith(ownerName + "_")) {
-                        String material = key.substring(ownerName.length() + 1);
-                        int amount = CropStorageManager.playerdata.getOrDefault(key, 0);
-                        if (amount > 0 && material.toLowerCase().startsWith(normalizedPartial)) {
-                            items.add(material);
                             if (items.size() >= 80) return new ArrayList<>(items);
                         }
                     }

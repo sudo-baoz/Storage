@@ -2,13 +2,16 @@ package net.danh.storage.GUI;
 
 import net.danh.storage.GUI.manager.IGUI;
 import net.danh.storage.GUI.manager.InteractiveItem;
-import net.danh.storage.GUI.manager.SortingOptions;
 import net.danh.storage.Manager.ItemManager;
 import net.danh.storage.Manager.MineManager;
 import net.danh.storage.Manager.SoundManager;
-import net.danh.storage.Storage;
-import net.danh.storage.Utils.*;
+import net.danh.storage.Manager.StorageCrafter;
+import net.danh.storage.Manager.StorageSettings;
+import net.danh.storage.Manager.StorageSettings.SortMode;
+import net.danh.storage.Utils.ChatUtils;
+import net.danh.storage.Utils.File;
 import net.danh.storage.Utils.Number;
+import net.danh.storage.Utils.SoundContext;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -21,16 +24,12 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class PersonalStorage implements IGUI {
 
-    private static final Map<UUID, SortingOptions> playerSorting = new ConcurrentHashMap<>();
-    private static final Set<String> sortingWarnings = ConcurrentHashMap.newKeySet();
     public static HashMap<UUID, Integer> playerCurrentPage = new HashMap<>();
     private final Player p;
     private final FileConfiguration config;
-    private boolean refreshPending;
     private int currentPage;
 
     public PersonalStorage(Player p) {
@@ -49,13 +48,42 @@ public class PersonalStorage implements IGUI {
         return playerCurrentPage.getOrDefault(player.getUniqueId(), 0);
     }
 
-    public static void cleanupSorting(UUID playerId) {
-        playerSorting.remove(playerId);
+    /**
+     * Display order of the item list; this never changes the stored amounts.
+     * Ties always fall back to the stored insertion order (then config order), so equal items never shuffle.
+     */
+    static List<String> sortedItems(String key, List<String> configOrder, java.util.function.Function<String, String> name,
+                                    java.util.function.ToIntFunction<String> amount) {
+        List<String> inserted = StorageSettings.insertionOrder(key);
+        List<String> base = new ArrayList<>();
+        for (String item : inserted) {
+            if (configOrder.contains(item)) base.add(item);
+        }
+        for (String item : configOrder) {
+            if (!base.contains(item)) base.add(item);
+        }
+        SortMode mode = StorageSettings.getSortMode(key);
+        if (mode == SortMode.INSERTION) {
+            return base;
+        }
+        Comparator<String> comparator;
+        switch (mode) {
+            case TYPE -> comparator = Comparator.comparing(i -> i.split(";")[0], String.CASE_INSENSITIVE_ORDER);
+            case NAME_ASC -> comparator = Comparator.comparing(name, String.CASE_INSENSITIVE_ORDER);
+            case NAME_DESC -> comparator = Comparator.comparing(name, String.CASE_INSENSITIVE_ORDER).reversed();
+            default -> comparator = Comparator.comparingInt(amount::applyAsInt).reversed();
+        }
+        // List.sort is stable, so equal elements keep their insertion order from `base`.
+        base.sort(comparator);
+        return base;
     }
 
-    public static void clearSorting() {
-        playerSorting.clear();
-        sortingWarnings.clear();
+    private static String plain(Player player, String text) {
+        return ChatColor.stripColor(ChatUtils.colorizewp(player, text));
+    }
+
+    private static String format(long value) {
+        return String.format(Locale.US, "%,d", value);
     }
 
     @NotNull
@@ -71,420 +99,192 @@ public class PersonalStorage implements IGUI {
         Inventory inventory = Bukkit.createInventory(this, config.getInt("size") * 9,
                 ChatUtils.colorizewp(p, Objects.requireNonNull(config.getString("title"))
                         .replace("#player#", p.getName())));
-        List<String> item_list = new ArrayList<>(MineManager.getOrderedPluginBlocks());
-        ConfigurationSection sortingSection = config.getConfigurationSection("items.sorting_options");
-        Set<Integer> sortingSlots = SortingOptions.resolveSlots(sortingSection,
-                Objects.requireNonNull(config.getConfigurationSection("items")), inventory.getSize(), warning -> {
-                    if (sortingWarnings.add(warning)) Storage.getStorage().getLogger().warning(warning);
-                });
-        SortingOptions sorting = sortingSlots.isEmpty() ? null : new SortingOptions(
-                sortingSection, playerSorting.get(p.getUniqueId()));
-        if (sorting != null) {
-            playerSorting.put(p.getUniqueId(), sorting);
-            sorting.sort(item_list, MineManager::getMaterial,
-                    key -> ChatColor.stripColor(ChatUtils.colorizewp(p,
-                            File.getConfig().getString("items." + key, key.split(";")[0]))),
-                    key -> MineManager.getPlayerBlock(p, MineManager.getMaterial(key)));
-        } else {
-            playerSorting.remove(p.getUniqueId());
-        }
-        int itemsPerPage = Objects.requireNonNull(config.getString("items.storage_item.slot")).split(",").length;
+        String key = MineManager.storageKey(p);
+        List<String> item_list = sortedItems(key, MineManager.getOrderedPluginBlocks(),
+                k -> plain(p, File.getConfig().getString("items." + k, k.split(";")[0])),
+                k -> MineManager.getPlayerBlock(p, MineManager.getMaterial(k)));
+
+        List<String> storageSlots = slotsOf("storage_item");
+        int itemsPerPage = Math.max(1, storageSlots.size());
         int totalPages = Math.max(1, (int) Math.ceil((double) item_list.size() / itemsPerPage));
-        boolean hasMultiplePages = totalPages > 1;
         int displayPage = Math.min(currentPage, totalPages - 1);
         currentPage = displayPage;
         playerCurrentPage.put(p.getUniqueId(), displayPage);
 
-        Set<Integer> navigationSlots = new HashSet<>();
-        if (hasMultiplePages) {
-            if (config.contains("items.previous_page.slot")) {
-                String prevSlot = config.getString("items.previous_page.slot");
-                if (prevSlot != null) {
-                    for (String s : prevSlot.split(",")) {
-                        navigationSlots.add(Number.getInteger(s.trim()));
+        ConfigurationSection items = Objects.requireNonNull(config.getConfigurationSection("items"));
+        for (String tag : items.getKeys(false)) {
+            ConfigurationSection section = items.getConfigurationSection(tag);
+            if (section == null) continue;
+            switch (tag.toLowerCase(Locale.ROOT)) {
+                case "storage_item" -> addStorageItems(inventory, item_list, storageSlots, displayPage, itemsPerPage);
+                case "toggle_item" -> addToggle(inventory, tag, section);
+                case "convert_button" -> addCrafter(inventory, tag, section);
+                case "pickup_filter" -> addButton(inventory, tag, section, ItemManager.getItemConfig(p, section),
+                        (player, click) -> open(player, new PickupFilterGUI(player, 0)));
+                case "sorting_options" -> addButton(inventory, tag, section, ItemManager.getItemConfigWithPlaceholders(p,
+                                section, "#sort_mode#", sortLabel(StorageSettings.getSortMode(key))),
+                        (player, click) -> open(player, new SortMenuGUI(player)));
+                case "previous_page" -> {
+                    if (displayPage > 0) {
+                        addButton(inventory, tag, section, navigation(tag, displayPage, totalPages),
+                                (player, click) -> player.openInventory(
+                                        new PersonalStorage(p, currentPage - 1).getInventory(SoundContext.SILENT)));
                     }
                 }
-            }
-            if (config.contains("items.next_page.slot")) {
-                String nextSlot = config.getString("items.next_page.slot");
-                if (nextSlot != null) {
-                    for (String s : nextSlot.split(",")) {
-                        navigationSlots.add(Number.getInteger(s.trim()));
+                case "next_page" -> {
+                    if (displayPage < totalPages - 1) {
+                        addButton(inventory, tag, section, navigation(tag, displayPage, totalPages),
+                                (player, click) -> player.openInventory(
+                                        new PersonalStorage(p, currentPage + 1).getInventory(SoundContext.SILENT)));
                     }
                 }
-            }
-        }
-
-        for (String item_tag : Objects.requireNonNull(config.getConfigurationSection("items")).getKeys(false)) {
-            if (item_tag.equalsIgnoreCase("sorting_options")) continue;
-            String slot = Objects.requireNonNull(config.getString("items." + item_tag + ".slot")).replace(" ", "");
-            if (item_tag.equalsIgnoreCase("storage_item")) {
-                if (slot.contains(",")) {
-                    List<String> slot_list = new ArrayList<>(Arrays.asList(slot.split(",")));
-                    int startIndex = displayPage * itemsPerPage;
-                    int endIndex = Math.min(startIndex + itemsPerPage, item_list.size());
-                    for (int i = startIndex; i < endIndex; i++) {
-                        int slotIndex = i - startIndex;
-                        if (slotIndex < slot_list.size()) {
-                            String material = MineManager.getMaterial(item_list.get(i));
-                            String itemKey = item_list.get(i);
-                            String name = File.getConfig().getString("items." + itemKey);
-                            String autopickupStatus = MineManager.isAutoPickupEnabledForItem(
-                                    p,
-                                    material
-                            )
-                                    ? Objects.requireNonNull(
-                                    File.getMessage().getString(
-                                            "user.status.status_on"
-                                    )
-                            )
-                                    : Objects.requireNonNull(
-                                    File.getMessage().getString(
-                                            "user.status.status_off"
-                                    )
-                            );
-
-                            ItemStack itemStack = ItemManager.getItemConfigWithPlaceholders(
-                                    p,
-                                    material,
-                                    name != null
-                                            ? name
-                                            : item_list.get(i).split(";")[0],
-                                    config.getConfigurationSection(
-                                            "items.storage_item"
-                                    ),
-                                    "#autopickup_status#",
-                                    autopickupStatus
-                            );
-
-                            if (itemStack == null || itemStack.getType() == Material.AIR) {
-                                continue;
-                            }
-                            InteractiveItem interactiveItem = new InteractiveItem(itemStack, Number.getInteger(slot_list.get(slotIndex))).onClick((player, clickType) -> {
-                                SoundManager.playItemSound(player, config, "items.storage_item", SoundContext.INITIAL_OPEN);
-                                SoundManager.setShouldPlayCloseSound(player, false);
-                                if (clickType == ClickType.DROP) {
-                                    boolean enabled = MineManager.toggleItemAutoPickup(p, material);
-                                    String status = enabled
-                                            ? Objects.requireNonNull(
-                                            File.getMessage().getString(
-                                                    "user.status.status_on"
-                                            )
-                                    )
-                                            : Objects.requireNonNull(
-                                            File.getMessage().getString(
-                                                    "user.status.status_off"
-                                            )
-                                    );
-
-                                    String configItemName = File.getConfig()
-                                            .getString("items." + itemKey);
-                                    String itemName = configItemName != null
-                                            ? configItemName
-                                            : itemKey.split(";")[0];
-
-                                    p.sendMessage(ChatUtils.colorize(
-                                            (File.getMessage().getString(
-                                                    "user.status.item_toggle"
-                                            ) != null
-                                                    ? File.getMessage().getString(
-                                                    "user.status.item_toggle"
-                                            )
-                                                    : "#prefix# &bAuto-pickup for #item#: #status#")
-                                                    .replace("#item#", itemName)
-                                                    .replace("#status#", status)
-                                    ));
-                                    p.openInventory(new PersonalStorage(p, displayPage)
-                                            .getInventory(SoundContext.SILENT));
-                                    return;
-                                }
-                                player.openInventory(new ItemStorage(p, material, displayPage).getInventory(SoundContext.SILENT));
-                            });
-                            inventory.setItem(interactiveItem.getSlot(), interactiveItem);
-                        }
-                    }
-                }
-            } else if (item_tag.equalsIgnoreCase("toggle_item")) {
-                if (slot.contains(",")) {
-                    for (String slot_string : slot.split(",")) {
-                        InteractiveItem item = new InteractiveItem(ItemManager.getItemConfig(p, Objects.requireNonNull(config.getConfigurationSection("items." + item_tag))), Number.getInteger(slot_string)).onClick((player, clickType) -> {
-                            SoundManager.playItemSound(player, config, "items." + item_tag, SoundContext.INITIAL_OPEN);
-                            boolean currentStatus = MineManager.getToggleStatus(p);
-                            MineManager.setToggleStatus(p, !currentStatus);
-                            MineManager.savePlayerData(p);
-                            p.sendMessage(ChatUtils.colorize(Objects.requireNonNull(File.getMessage().getString("user.status.toggle")).replace("#status#", ItemManager.getStatus(p))));
-                            SoundManager.setShouldPlayCloseSound(p, false);
-                            p.openInventory(new PersonalStorage(p, currentPage).getInventory(SoundContext.SILENT));
-                        });
-                        inventory.setItem(item.getSlot(), item);
-                    }
-                } else {
-                    InteractiveItem item = new InteractiveItem(ItemManager.getItemConfig(p, Objects.requireNonNull(config.getConfigurationSection("items." + item_tag))), Number.getInteger(slot)).onClick((player, clickType) -> {
-                        SoundManager.playItemSound(player, config, "items." + item_tag, SoundContext.INITIAL_OPEN);
-                        boolean currentStatus = MineManager.getToggleStatus(p);
-                        MineManager.setToggleStatus(p, !currentStatus);
-                        MineManager.savePlayerData(p);
-                        p.sendMessage(ChatUtils.colorize(Objects.requireNonNull(File.getMessage().getString("user.status.toggle")).replace("#status#", ItemManager.getStatus(p))));
-                        SoundManager.setShouldPlayCloseSound(p, false);
-                        p.openInventory(new PersonalStorage(p, currentPage).getInventory(SoundContext.SILENT));
-                    });
-                    inventory.setItem(item.getSlot(), item);
-                }
-            } else if (item_tag.equalsIgnoreCase("groundstore_item")) {
-                ConfigurationSection section = config.getConfigurationSection(
-                        "items." + item_tag
-                );
-                if (section == null) {
-                    continue;
-                }
-
-                String status = MineManager.isGroundStoreEnabled(p)
-                        ? ChatUtils.colorizewp(
-                        File.getMessage().getString(
-                                "user.status.status_on"
-                        )
-                )
-                        : ChatUtils.colorizewp(
-                        File.getMessage().getString(
-                                "user.status.status_off"
-                        )
-                );
-
-                ItemStack itemStack = ItemManager.getItemConfigWithPlaceholders(
-                        p,
-                        section,
-                        "#status#",
-                        status
-                );
-
-                if (slot.contains(",")) {
-                    for (String slot_string : slot.split(",")) {
-                        InteractiveItem item = new InteractiveItem(
-                                itemStack,
-                                Number.getInteger(slot_string)
-                        ).onClick((player, clickType) -> {
-                            SoundManager.playItemSound(player, config,
-                                    "items." + item_tag,
-                                    SoundContext.INITIAL_OPEN);
-
-                            if (!player.hasPermission("storage.groundstore")) {
-                                player.sendMessage(ChatUtils.colorize(
-                                        Objects.requireNonNull(File.getMessage()
-                                                .getString(
-                                                        "user.ground_store.no_permission"
-                                                ))
-                                ));
-                                return;
-                            }
-
-                            if (!MineManager.isGroundStoreSystemEnabled()) {
-                                player.sendMessage(ChatUtils.colorize(
-                                        Objects.requireNonNull(File.getMessage()
-                                                .getString(
-                                                        "user.ground_store.system_disabled"
-                                                ))
-                                ));
-                                return;
-                            }
-
-                            if (File.getConfig().contains("blacklist_world")
-                                    && File.getConfig().getStringList(
-                                    "blacklist_world"
-                            ).contains(player.getWorld().getName())) {
-                                String msg = Objects.requireNonNull(
-                                        File.getMessage().getString(
-                                                "admin.world_blacklisted"
-                                        )
-                                );
-                                player.sendMessage(ChatUtils.colorize(msg
-                                        .replace("#feature#", "Storage")
-                                        .replace("#world#",
-                                                player.getWorld().getName())));
-                                return;
-                            }
-
-                            boolean enabled = MineManager.toggleGroundStore(p);
-                            player.sendMessage(ChatUtils.colorize(
-                                    Objects.requireNonNull(File.getMessage().getString(
-                                            enabled
-                                                    ? "user.ground_store.toggle_on"
-                                                    : "user.ground_store.toggle_off"
-                                    ))
-                            ));
-
-                            SoundManager.setShouldPlayCloseSound(p, false);
-                            p.openInventory(new PersonalStorage(p, currentPage)
-                                    .getInventory(SoundContext.SILENT));
-                        });
-                        inventory.setItem(item.getSlot(), item);
-                    }
-                } else {
-                    InteractiveItem item = new InteractiveItem(
-                            itemStack,
-                            Number.getInteger(slot)
-                    ).onClick((player, clickType) -> {
-                        SoundManager.playItemSound(player, config,
-                                "items." + item_tag,
-                                SoundContext.INITIAL_OPEN);
-
-                        if (!player.hasPermission("storage.groundstore")) {
-                            player.sendMessage(ChatUtils.colorize(
-                                    Objects.requireNonNull(File.getMessage()
-                                            .getString(
-                                                    "user.ground_store.no_permission"
-                                            ))
-                            ));
-                            return;
-                        }
-
-                        if (!MineManager.isGroundStoreSystemEnabled()) {
-                            player.sendMessage(ChatUtils.colorize(
-                                    Objects.requireNonNull(File.getMessage()
-                                            .getString(
-                                                    "user.ground_store.system_disabled"
-                                            ))
-                            ));
-                            return;
-                        }
-
-                        if (File.getConfig().contains("blacklist_world")
-                                && File.getConfig().getStringList("blacklist_world")
-                                .contains(player.getWorld().getName())) {
-                            String msg = Objects.requireNonNull(
-                                    File.getMessage().getString(
-                                            "admin.world_blacklisted"
-                                    )
-                            );
-                            player.sendMessage(ChatUtils.colorize(msg
-                                    .replace("#feature#", "Storage")
-                                    .replace("#world#",
-                                            player.getWorld().getName())));
-                            return;
-                        }
-
-                        boolean enabled = MineManager.toggleGroundStore(p);
-                        player.sendMessage(ChatUtils.colorize(
-                                Objects.requireNonNull(File.getMessage().getString(
-                                        enabled
-                                                ? "user.ground_store.toggle_on"
-                                                : "user.ground_store.toggle_off"
-                                ))
-                        ));
-
-                        SoundManager.setShouldPlayCloseSound(p, false);
-                        p.openInventory(new PersonalStorage(p, currentPage)
-                                .getInventory(SoundContext.SILENT));
-                    });
-                    inventory.setItem(item.getSlot(), item);
-                }
-            } else if (item_tag.equalsIgnoreCase("convert_button")) {
-                if (slot.contains(",")) {
-                    for (String slot_string : slot.split(",")) {
-                        InteractiveItem item = new InteractiveItem(ItemManager.getItemConfig(Objects.requireNonNull(config.getConfigurationSection("items." + item_tag))), Number.getInteger(slot_string)).onClick((player, clickType) -> {
-                            SoundManager.playItemSound(player, config, "items." + item_tag, SoundContext.INITIAL_OPEN);
-                            player.openInventory(new ConvertOreGUI(player).getInventory(SoundContext.SILENT));
-                        });
-                        inventory.setItem(item.getSlot(), item);
-                    }
-                } else {
-                    InteractiveItem item = new InteractiveItem(ItemManager.getItemConfig(p, Objects.requireNonNull(config.getConfigurationSection("items." + item_tag))), Number.getInteger(slot)).onClick((player, clickType) -> {
-                        if (!player.hasPermission("storage.convert")) {
-                            player.sendMessage(ChatUtils.colorize(Objects.requireNonNull(File.getMessage().getString("admin.no_permission"))));
-                            player.closeInventory();
-                            return;
-                        }
-                        SoundManager.playItemSound(player, config, "items." + item_tag, SoundContext.INITIAL_OPEN);
-                        SoundManager.setShouldPlayCloseSound(player, false);
-                        player.openInventory(new ConvertOreGUI(p, 0).getInventory(SoundContext.SILENT));
-                    });
-                    inventory.setItem(item.getSlot(), item);
-                }
-            } else if (item_tag.equalsIgnoreCase("previous_page")) {
-                if (hasMultiplePages && currentPage > 0) {
-                    ItemStack prevPageItem = getNavigationItem(item_tag, currentPage, totalPages);
-                    if (prevPageItem != null) {
-                        if (slot.contains(",")) {
-                            for (String slotString : slot.split(",")) {
-                                InteractiveItem item = new InteractiveItem(prevPageItem.clone(), Number.getInteger(slotString.trim())).onClick((player, clickType) -> {
-                                    SoundManager.playItemSound(player, config, "items.previous_page", SoundContext.INITIAL_OPEN);
-                                    SoundManager.setShouldPlayCloseSound(player, false);
-                                    player.openInventory(new PersonalStorage(p, currentPage - 1).getInventory(SoundContext.SILENT));
-                                });
-                                inventory.setItem(item.getSlot(), item);
-                            }
-                        } else {
-                            InteractiveItem item = new InteractiveItem(prevPageItem, Number.getInteger(slot)).onClick((player, clickType) -> {
-                                SoundManager.playItemSound(player, config, "items.previous_page", SoundContext.INITIAL_OPEN);
-                                SoundManager.setShouldPlayCloseSound(player, false);
-                                player.openInventory(new PersonalStorage(p, currentPage - 1).getInventory(SoundContext.SILENT));
-                            });
-                            inventory.setItem(item.getSlot(), item);
-                        }
-                    }
-                }
-            } else if (item_tag.equalsIgnoreCase("next_page")) {
-                if (hasMultiplePages && currentPage < totalPages - 1) {
-                    ItemStack nextPageItem = getNavigationItem(item_tag, currentPage, totalPages);
-                    if (nextPageItem != null) {
-                        if (slot.contains(",")) {
-                            for (String slotString : slot.split(",")) {
-                                InteractiveItem item = new InteractiveItem(nextPageItem.clone(), Number.getInteger(slotString.trim())).onClick((player, clickType) -> {
-                                    SoundManager.playItemSound(player, config, "items.next_page", SoundContext.INITIAL_OPEN);
-                                    SoundManager.setShouldPlayCloseSound(player, false);
-                                    player.openInventory(new PersonalStorage(p, currentPage + 1).getInventory(SoundContext.SILENT));
-                                });
-                                inventory.setItem(item.getSlot(), item);
-                            }
-                        } else {
-                            InteractiveItem item = new InteractiveItem(nextPageItem, Number.getInteger(slot)).onClick((player, clickType) -> {
-                                SoundManager.playItemSound(player, config, "items.next_page", SoundContext.INITIAL_OPEN);
-                                SoundManager.setShouldPlayCloseSound(player, false);
-                                player.openInventory(new PersonalStorage(p, currentPage + 1).getInventory(SoundContext.SILENT));
-                            });
-                            inventory.setItem(item.getSlot(), item);
-                        }
-                    }
-                }
-            } else {
-                if (slot.contains(",")) {
-                    for (String slot_string : slot.split(",")) {
-                        int slotNumber = Number.getInteger(slot_string);
-                        if (sortingSlots.contains(slotNumber)) continue;
-                        if (hasMultiplePages && navigationSlots.contains(slotNumber)) {
-                            continue;
-                        }
-                        InteractiveItem item = new InteractiveItem(ItemManager.getItemConfig(Objects.requireNonNull(config.getConfigurationSection("items." + item_tag))), slotNumber);
-                        inventory.setItem(item.getSlot(), item);
-                    }
-                } else {
-                    int slotNumber = Number.getInteger(slot);
-                    if (sortingSlots.contains(slotNumber)) continue;
-                    if (!(hasMultiplePages && navigationSlots.contains(slotNumber))) {
-                        InteractiveItem item = new InteractiveItem(ItemManager.getItemConfig(Objects.requireNonNull(config.getConfigurationSection("items." + item_tag))), slotNumber);
-                        inventory.setItem(item.getSlot(), item);
-                    }
-                }
-            }
-        }
-        if (sorting != null) {
-            ItemStack button = ItemManager.getItemConfigWithPlaceholders(p, sortingSection, sorting.placeholders());
-            for (int buttonSlot : sortingSlots) {
-                InteractiveItem item = new InteractiveItem(button, buttonSlot).onClick((player, clickType) -> {
-                    if (!sorting.change(clickType)) return;
-                    SoundManager.playItemSound(player, config, "items.sorting_options", SoundContext.INITIAL_OPEN);
-                    if (refreshPending) return;
-                    refreshPending = true;
-                    SchedulerUtil.runTask(Storage.getStorage(), player, () -> {
-                        refreshPending = false;
-                        if (!player.isOnline() || !inventory.getViewers().contains(player)) return;
-                        SoundManager.setShouldPlayCloseSound(player, false);
-                        player.openInventory(new PersonalStorage(player, 0).getInventory(SoundContext.SILENT));
-                    });
-                });
-                inventory.setItem(buttonSlot, item);
+                default -> addDecoration(inventory, section);
             }
         }
         return inventory;
+    }
+
+    private String sortLabel(SortMode mode) {
+        ConfigurationSection label = File.getStorageToolsConfig().getConfigurationSection("sort.modes." + mode.name());
+        return label == null ? mode.name() : ChatUtils.colorizewp(p, label.getString("name", mode.name()));
+    }
+
+    private List<String> slotsOf(String tag) {
+        List<String> result = new ArrayList<>();
+        String raw = config.getString("items." + tag + ".slot");
+        if (raw != null) {
+            for (String part : raw.replace(" ", "").split(",")) {
+                if (!part.isEmpty()) result.add(part);
+            }
+        }
+        return result;
+    }
+
+    private void open(Player player, IGUI gui) {
+        SoundManager.setShouldPlayCloseSound(player, false);
+        player.openInventory(gui.getInventory(SoundContext.SILENT));
+    }
+
+    private void refresh(Player player) {
+        SoundManager.setShouldPlayCloseSound(player, false);
+        player.openInventory(new PersonalStorage(p, currentPage).getInventory(SoundContext.SILENT));
+    }
+
+    private void addButton(Inventory inventory, String tag, ConfigurationSection section, ItemStack stack,
+                           java.util.function.BiConsumer<Player, ClickType> action) {
+        if (stack == null) return;
+        for (String slot : slotsOf(tag)) {
+            InteractiveItem item = new InteractiveItem(stack.clone(), Number.getInteger(slot)).onClick((player, click) -> {
+                SoundManager.playItemSound(player, config, "items." + tag, SoundContext.INITIAL_OPEN);
+                action.accept(player, click);
+            });
+            inventory.setItem(item.getSlot(), item);
+        }
+    }
+
+    private void addDecoration(Inventory inventory, ConfigurationSection section) {
+        ItemStack stack = ItemManager.getItemConfig(section);
+        for (String slot : section.getString("slot", "").replace(" ", "").split(",")) {
+            if (slot.isEmpty()) continue;
+            InteractiveItem item = new InteractiveItem(stack.clone(), Number.getInteger(slot));
+            inventory.setItem(item.getSlot(), item);
+        }
+    }
+
+    private void addStorageItems(Inventory inventory, List<String> itemList, List<String> slotList,
+                                 int displayPage, int itemsPerPage) {
+        int startIndex = displayPage * itemsPerPage;
+        int endIndex = Math.min(startIndex + itemsPerPage, itemList.size());
+        for (int i = startIndex; i < endIndex; i++) {
+            int slotIndex = i - startIndex;
+            if (slotIndex >= slotList.size()) break;
+            String itemKey = itemList.get(i);
+            String material = MineManager.getMaterial(itemKey);
+            String name = File.getConfig().getString("items." + itemKey);
+            String autopickupStatus = File.getMessage().getString(MineManager.isAutoPickupEnabledForItem(p, material)
+                    ? "user.status.status_on" : "user.status.status_off");
+            ItemStack itemStack = ItemManager.getItemConfigWithPlaceholders(p, material,
+                    name != null ? name : itemKey.split(";")[0],
+                    config.getConfigurationSection("items.storage_item"),
+                    "#autopickup_status#", autopickupStatus);
+            if (itemStack == null || itemStack.getType() == Material.AIR) continue;
+
+            InteractiveItem interactiveItem = new InteractiveItem(itemStack, Number.getInteger(slotList.get(slotIndex)))
+                    .onClick((player, clickType) -> {
+                        SoundManager.playItemSound(player, config, "items.storage_item", SoundContext.INITIAL_OPEN);
+                        SoundManager.setShouldPlayCloseSound(player, false);
+                        if (clickType == ClickType.DROP) {
+                            boolean enabled = MineManager.toggleItemAutoPickup(p, material);
+                            String status = File.getMessage().getString(enabled
+                                    ? "user.status.status_on" : "user.status.status_off");
+                            String itemName = name != null ? name : itemKey.split(";")[0];
+                            String template = File.getMessage().getString("user.status.item_toggle");
+                            p.sendMessage(ChatUtils.colorize((template != null ? template
+                                    : "#prefix# &bAuto-pickup for #item#: #status#")
+                                    .replace("#item#", itemName).replace("#status#", status)));
+                            refresh(player);
+                            return;
+                        }
+                        player.openInventory(new ItemStorage(p, material, currentPage).getInventory(SoundContext.SILENT));
+                    });
+            inventory.setItem(interactiveItem.getSlot(), interactiveItem);
+        }
+    }
+
+    /**
+     * Copper Golem: left click toggles auto-pickup, Shift + left click opens the upgrade menu.
+     * Shift is checked first so one click never does both.
+     */
+    private void addToggle(Inventory inventory, String tag, ConfigurationSection section) {
+        boolean enabled = MineManager.getToggleStatus(p);
+        ItemStack stack = ItemManager.getItemConfigWithMaterial(p, section,
+                section.getString(enabled ? "material" : "material_disabled", section.getString("material")),
+                "#status#", ItemManager.getStatus(p),
+                "#used#", format(MineManager.getTotalStored(p)),
+                "#capacity#", format(MineManager.getMaxBlock(p)));
+        addButton(inventory, tag, section, stack, (player, click) -> {
+            if (click == ClickType.SHIFT_LEFT) {
+                open(player, new UpgradeGUI(player));
+            } else if (click == ClickType.LEFT) {
+                MineManager.setToggleStatus(p, !MineManager.getToggleStatus(p));
+                MineManager.savePlayerData(p);
+                p.sendMessage(ChatUtils.colorize(Objects.requireNonNull(File.getMessage().getString("user.status.toggle"))
+                        .replace("#status#", ItemManager.getStatus(p))));
+                refresh(player);
+            }
+        });
+    }
+
+    /**
+     * Crafter: left click crafts one block, Shift + left click crafts everything possible (Donate permission).
+     */
+    private void addCrafter(Inventory inventory, String tag, ConfigurationSection section) {
+        addButton(inventory, tag, section, ItemManager.getItemConfig(p, section), (player, click) -> {
+            if (click != ClickType.LEFT && click != ClickType.SHIFT_LEFT) return;
+            if (!StorageCrafter.isEnabled()) {
+                send("storage_tools.crafter.disabled");
+                return;
+            }
+            if (!StorageCrafter.hasPermission(player)) {
+                send("storage_tools.crafter.no_permission");
+                return;
+            }
+            boolean all = click == ClickType.SHIFT_LEFT;
+            int crafted = all ? StorageCrafter.craftAll(p) : StorageCrafter.craftOne(p);
+            if (crafted <= 0) {
+                send("storage_tools.crafter.nothing");
+                return;
+            }
+            MineManager.savePlayerData(p);
+            p.sendMessage(ChatUtils.colorize(File.getMessage().getString(all
+                            ? "storage_tools.crafter.crafted_all" : "storage_tools.crafter.crafted_one",
+                    "#prefix# Crafted #amount# blocks").replace("#amount#", String.valueOf(crafted))));
+            refresh(player);
+        });
+    }
+
+    private void send(String path) {
+        p.sendMessage(ChatUtils.colorize(File.getMessage().getString(path, "#prefix# " + path)));
     }
 
     public Player getPlayer() {
@@ -499,7 +299,7 @@ public class PersonalStorage implements IGUI {
         return currentPage;
     }
 
-    private ItemStack getNavigationItem(String itemTag, int currentPage, int totalPages) {
+    private ItemStack navigation(String itemTag, int currentPage, int totalPages) {
         ConfigurationSection section = config.getConfigurationSection("items." + itemTag);
         if (section == null) return null;
 

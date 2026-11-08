@@ -1,33 +1,17 @@
 package net.danh.storage;
 
 import net.danh.storage.API.StorageAPI;
-import net.danh.storage.CMD.CropStorageCMD;
-import net.danh.storage.CMD.MobStorageCMD;
-import net.danh.storage.CMD.MythicStorageCMD;
 import net.danh.storage.CMD.StorageCMD;
 import net.danh.storage.Database.*;
-import net.danh.storage.GUI.Crop.CropStorageGUI;
 import net.danh.storage.GUI.GUI;
-import net.danh.storage.GUI.Mob.MobStorageGUI;
-import net.danh.storage.GUI.Mythic.MythicStorageGUI;
 import net.danh.storage.GUI.PersonalStorage;
 import net.danh.storage.Listeners.*;
-import net.danh.storage.Listeners.Crop.CropBreak;
 import net.danh.storage.Listeners.LuckPerms.LuckPermsListener;
-import net.danh.storage.Listeners.Mob.MobDeath;
-import net.danh.storage.Listeners.Mythic.MythicMobDeath;
-import net.danh.storage.Listeners.Mythic.MythicMobsLoadListener;
 import net.danh.storage.Manager.*;
 import net.danh.storage.Manager.Crafting.CraftingManager;
 import net.danh.storage.Manager.Crafting.RecipeEditManager;
-import net.danh.storage.Manager.Crop.CropStorageManager;
-import net.danh.storage.Manager.Crop.CropTransferManager;
 import net.danh.storage.Manager.Event.EventManager;
 import net.danh.storage.Manager.Friend.FriendManager;
-import net.danh.storage.Manager.Mob.MobStorageManager;
-import net.danh.storage.Manager.Mob.MobTransferManager;
-import net.danh.storage.Manager.Mythic.MythicStorageManager;
-import net.danh.storage.Manager.Mythic.MythicTransferManager;
 import net.danh.storage.Manager.SpecialMaterial.SpecialMaterialManager;
 import net.danh.storage.NMS.NMSAssistant;
 import net.danh.storage.Placeholder.CraftingPlaceholder;
@@ -78,6 +62,43 @@ public final class Storage extends JavaPlugin {
 
     public static boolean isMMOItemsInstalled() {
         return MMOItems;
+    }
+
+    /**
+     * One-time copy of the local player data before the first run with the total-capacity storage (the new
+     * settings are appended to the existing data string, nothing is rewritten, but a rollback copy is cheap).
+     */
+    private void backupDataOnce() {
+        java.io.File marker = new java.io.File(getDataFolder(), ".backup-total-capacity");
+        if (marker.exists()) {
+            return;
+        }
+        try {
+            java.nio.file.Path folder = getDataFolder().toPath();
+            java.nio.file.Path db = folder.resolve("PlayerData.db");
+            if (java.nio.file.Files.isRegularFile(db)) {
+                java.nio.file.Files.copy(db, folder.resolve("PlayerData.db.pre-total-capacity.bak"),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+            java.nio.file.Path players = folder.resolve("data");
+            if (java.nio.file.Files.isDirectory(players)) {
+                java.nio.file.Path target = folder.resolve("data-pre-total-capacity-backup");
+                try (java.util.stream.Stream<java.nio.file.Path> walk = java.nio.file.Files.walk(players)) {
+                    for (java.nio.file.Path source : (Iterable<java.nio.file.Path>) walk::iterator) {
+                        java.nio.file.Path copy = target.resolve(players.relativize(source).toString());
+                        if (java.nio.file.Files.isDirectory(source)) {
+                            java.nio.file.Files.createDirectories(copy);
+                        } else {
+                            java.nio.file.Files.copy(source, copy, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                }
+            }
+            java.nio.file.Files.createDirectories(folder);
+            java.nio.file.Files.createFile(marker.toPath());
+        } catch (java.io.IOException e) {
+            getLogger().warning("Could not back up player data before the capacity update: " + e.getMessage());
+        }
     }
 
     public static boolean isMythicLibInstalled() {
@@ -145,6 +166,39 @@ public final class Storage extends JavaPlugin {
         }
 
         return false;
+    }
+
+    /**
+     * Charge the player through Vault. Returns false when no economy is hooked, funds are missing or it fails.
+     */
+    public static boolean withdrawFromVault(Player player, double money) {
+        if (player == null || money < 0) {
+            return false;
+        }
+        if (money == 0) {
+            return true;
+        }
+        try {
+            if (vault2Economy != null) {
+                Object response = vault2Economy.getClass().getMethod("withdraw",
+                                String.class, java.util.UUID.class, java.math.BigDecimal.class)
+                        .invoke(vault2Economy, getStorage().getDescription().getName(),
+                                player.getUniqueId(), java.math.BigDecimal.valueOf(money));
+                return isVaultResponseSuccess(response);
+            }
+            if (vaultEconomy != null) {
+                Object response = vaultEconomy.getClass().getMethod("withdrawPlayer",
+                        org.bukkit.OfflinePlayer.class, double.class).invoke(vaultEconomy, player, money);
+                return isVaultResponseSuccess(response);
+            }
+        } catch (Throwable t) {
+            getStorage().getLogger().warning("Vault withdraw failed: " + t.getMessage());
+        }
+        return false;
+    }
+
+    public static boolean isVaultHooked() {
+        return vault2Economy != null || vaultEconomy != null;
     }
 
     private static boolean isVaultResponseSuccess(Object response) {
@@ -392,11 +446,8 @@ public final class Storage extends JavaPlugin {
         File.updateEventConfig();
         File.updateEnchantConfig();
         File.updateSpecialMaterialConfig();
-        File.updateMythicStorageConfig();
         File.updateCraftingConfig();
-        File.updateCropStorageConfig();
         File.updateFriendStorageConfig();
-        File.updateMobStorageConfig();
 
         MineManager.loadPlacedBlocks();
 
@@ -412,13 +463,11 @@ public final class Storage extends JavaPlugin {
         }
         UpdateChecker updateChecker = new UpdateChecker(storage);
         registerEvents(updateChecker, new JoinQuit(), new SpecialMaterialEffects(), new BlockBreak(), new ChatListener(), new BlockPlace(),
-                new GroundStoreListener(), new PluginLoadListener());
+                new PluginLoadListener());
         updateChecker.fetch();
         new StorageCMD("storage");
-        new MythicStorageCMD("mythicstorage");
-        new CropStorageCMD("cropstorage");
-        new MobStorageCMD("mobstorage");
 
+        backupDataOnce();
         dataStorage = DatabaseFactory.createDatabase(this);
         dataStorage.load();
         getLogger().info("Using " + dataStorage.getType() + " database for data storage");
@@ -440,15 +489,6 @@ public final class Storage extends JavaPlugin {
         EnchantManager.loadEnchants();
         SpecialMaterialManager.loadSpecialMaterials();
         CraftingManager.loadRecipes();
-
-        // Initialize MythicStorage if MythicMobs is available
-        initializeMythicStorage();
-
-        // Initialize CropStorage
-        initializeCropStorage();
-
-        // Initialize MobStorage
-        initializeMobStorage();
 
         // Rebuild hot-path config cache now that all managers are fully initialized
         AutoPickupCache.reload();
@@ -551,28 +591,13 @@ public final class Storage extends JavaPlugin {
                 }
             }
 
-            List<String> allowed = File.getConfig().getStringList(
-                    "ground_store.allowed_items");
-            Set<String> mergedAllowed = new LinkedHashSet<>();
-            if (allowed != null) {
-                mergedAllowed.addAll(allowed);
-            }
-            int beforeAllowed = mergedAllowed.size();
-            mergedAllowed.addAll(blockKeys);
-            mergedAllowed.addAll(autoSmeltDropKeys);
-            int addedAllowed = mergedAllowed.size() - beforeAllowed;
-            File.getConfig().set(
-                    "ground_store.allowed_items",
-                    new ArrayList<>(mergedAllowed));
-
             long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
             getLogger().log(
                     Level.WARNING,
                     "[DEBUG] Storage debug mode applied: blocks="
                             + blockKeys.size() + ", added_blocks="
                             + addedBlocks + ", added_items="
-                            + addedItems + ", added_allowed_items="
-                            + addedAllowed + ", added_autosmelt_blocks="
+                            + addedItems + ", added_autosmelt_blocks="
                             + addedAutoSmeltBlocks
                             + ", added_autosmelt_items="
                             + addedAutoSmeltItems
@@ -602,31 +627,18 @@ public final class Storage extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        PersonalStorage.clearSorting();
-        MobStorageGUI.clearSorting();
-        CropStorageGUI.clearSorting();
-        MythicStorageGUI.clearSorting();
         GUI.getItemMapper().clear();
         getLogger().log(Level.INFO, "Shutting down...");
         EventManager.shutdown();
         AutoSaveManager.stopAutoSave();
         for (Player p : Bukkit.getOnlinePlayers()) {
             MineManager.savePlayerData(p);
-            MythicStorageManager.savePlayerData(p);
-            CropStorageManager.savePlayerData(p);
-            MobStorageManager.savePlayerData(p);
             // Cleanup player-specific data from managers
             MineManager.cleanupPlayerData(p);
-            MythicStorageManager.cleanupPlayerData(p);
-            CropStorageManager.cleanupPlayerData(p);
-            MobStorageManager.cleanupPlayerData(p);
             SpecialMaterialManager.cleanupPlayerData(p);
             SoundManager.cleanupPlayer(p);
         }
         TransferManager.cancelAllTransfers();
-        MythicTransferManager.cancelAllTransfers();
-        CropTransferManager.cancelAllTransfers();
-        MobTransferManager.cancelAllTransfers();
         CraftingManager.cancelAllCrafting();
         ParticleManager.stopAllAnimations();
         RecipeEditManager.clearFlagCache();
@@ -646,51 +658,6 @@ public final class Storage extends JavaPlugin {
         Arrays.asList(listeners).forEach(listener -> getServer().getPluginManager().registerEvents(listener, storage));
     }
 
-    private void initializeMythicStorage() {
-        if (Bukkit.getPluginManager().getPlugin("MythicMobs") != null &&
-                Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
 
-            getLogger().info("[MythicStorage] MythicMobs already loaded, initializing immediately...");
-            MythicStorageManager.initialize();
-            MythicTransferManager.initialize();
 
-            if (MythicStorageManager.isSystemEnabled()) {
-                MythicMobDeath.registerListener(this);
-            }
-        } else {
-            getLogger().info("[MythicStorage] MythicMobs not loaded yet, waiting for plugin enable...");
-            registerEvents(new MythicMobsLoadListener());
-        }
-    }
-
-    private void initializeCropStorage() {
-        CropStorageManager.initialize();
-        CropTransferManager.initialize();
-        if (CropStorageManager.isSystemEnabled()) {
-            getLogger().info("[CropStorage] System enabled, registering crop break listener...");
-            registerEvents(new CropBreak());
-
-            // Load data for online players (in case of reload)
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                CropStorageManager.loadPlayerData(p);
-            }
-        } else {
-            getLogger().info("[CropStorage] System disabled in config.");
-        }
-    }
-
-    private void initializeMobStorage() {
-        MobStorageManager.initialize();
-        MobTransferManager.initialize();
-        if (MobStorageManager.isSystemEnabled()) {
-            getLogger().info("[MobStorage] System enabled, registering mob death listener...");
-            registerEvents(new MobDeath());
-
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                MobStorageManager.loadPlayerData(p);
-            }
-        } else {
-            getLogger().info("[MobStorage] System disabled in config.");
-        }
-    }
 }

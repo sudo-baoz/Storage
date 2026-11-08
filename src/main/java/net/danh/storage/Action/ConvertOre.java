@@ -59,21 +59,16 @@ public class ConvertOre {
         int requiredAmount = actualConversions * option.fromAmount();
         int resultAmount = option.calculateResultAmount(actualConversions);
 
-        int currentToAmount = MineManager.getPlayerBlock(player, toMaterial);
-        int maxStorage = MineManager.getMaxBlock(player);
-
-        if (currentToAmount + resultAmount > maxStorage) {
-            int availableSpace = maxStorage - currentToAmount;
-            int maxPossibleConversions = availableSpace / option.toAmount();
-
-            if (maxPossibleConversions <= 0) {
-                sendMessage("convert.storage_full", "#material#", getMaterialName(toMaterial));
-                return;
-            }
-
-            actualConversions = maxPossibleConversions;
+        // Converting frees the input items first, so only the net growth must fit in the total capacity.
+        int freeSpace = MineManager.getFreeSpace(player);
+        while (actualConversions > 0 && resultAmount > freeSpace + requiredAmount) {
+            actualConversions--;
             requiredAmount = actualConversions * option.fromAmount();
             resultAmount = option.calculateResultAmount(actualConversions);
+        }
+        if (actualConversions <= 0) {
+            sendMessage("convert.storage_full", "#material#", getMaterialName(toMaterial));
+            return;
         }
 
         if (MineManager.removeBlockAmount(player, fromMaterial, requiredAmount, false)) {

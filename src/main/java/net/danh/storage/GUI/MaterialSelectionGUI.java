@@ -5,10 +5,8 @@ import net.danh.storage.GUI.manager.IGUI;
 import net.danh.storage.GUI.manager.InteractiveItem;
 import net.danh.storage.Manager.Crafting.CraftingManager;
 import net.danh.storage.Manager.Crafting.RecipeEditManager;
-import net.danh.storage.Manager.Crop.CropStorageManager;
 import net.danh.storage.Manager.ItemManager;
 import net.danh.storage.Manager.MineManager;
-import net.danh.storage.Manager.Mob.MobStorageManager;
 import net.danh.storage.Manager.SoundManager;
 import net.danh.storage.Recipe.Recipe;
 import net.danh.storage.Utils.*;
@@ -171,27 +169,13 @@ public class MaterialSelectionGUI implements IGUI {
     }
 
     private String getMaterialDisplayName(String materialName, String baseMaterial) {
-        if (selectionType.equals("crop_requirement")) {
-            return CropStorageManager.getItemDisplayName(materialName);
-        }
-        if (selectionType.equals("mob_requirement")) {
-            return MobStorageManager.getItemDisplayName(materialName);
-        }
         return File.getConfig().getString("items." + materialName, baseMaterial);
     }
 
     private List<String> getPlayerStorageMaterials() {
         List<String> materials = new ArrayList<>();
 
-        if (selectionType.equals("crop_requirement")) {
-            if (CropStorageManager.isSystemEnabled()) {
-                materials.addAll(CropStorageManager.getConfiguredDrops());
-            }
-        } else if (selectionType.equals("mob_requirement")) {
-            if (MobStorageManager.isSystemEnabled()) {
-                materials.addAll(MobStorageManager.getConfiguredDrops());
-            }
-        } else {
+        {
             FileConfiguration config = File.getConfig();
             if (config.contains("items")) {
                 Set<String> itemKeys = config.getConfigurationSection("items").getKeys(false);
@@ -209,12 +193,6 @@ public class MaterialSelectionGUI implements IGUI {
     }
 
     private String getStorageTypeName() {
-        if (selectionType.equals("crop_requirement")) {
-            return "CropStorage";
-        }
-        if (selectionType.equals("mob_requirement")) {
-            return "MobStorage";
-        }
         return "Storage";
     }
 

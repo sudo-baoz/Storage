@@ -72,6 +72,14 @@ public final class IslandStorageManager {
         return isSellAllowed(island.islandId(), player.getUniqueId());
     }
 
+    /**
+     * True for the island owner and for players without an island (they own their personal storage).
+     */
+    public static boolean isOwnerOrSolo(@NotNull Player player) {
+        IslandInfo island = find(player.getUniqueId());
+        return island == null || island.ownerId().equals(player.getUniqueId());
+    }
+
     public static boolean isSellAllowed(@NotNull UUID islandId, @NotNull UUID memberId) {
         Map<UUID, Boolean> overrides = SELL_OVERRIDES.get(islandId);
         Boolean value = overrides == null ? null : overrides.get(memberId);

@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class FriendManager {
 
-    private static final String[] STORAGE_TYPES = {"storage", "mythicstorage", "cropstorage"};
+    private static final String[] STORAGE_TYPES = {"storage"};
     private static final Map<UUID, Set<UUID>> friendCache = new ConcurrentHashMap<>();
     private static final Map<UUID, Map<UUID, Long>> pendingRequestCache = new ConcurrentHashMap<>();
     private static final Map<UUID, Map<String, Boolean>> accessSettingCache = new ConcurrentHashMap<>();

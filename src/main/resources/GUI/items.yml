@@ -54,7 +54,7 @@ items:
     # Lore of item
     lore:
       - "&7 "
-      - "&f#item_amount#/#max_storage# Items"
+      - "&fAmount: &a#item_amount#"
       - "&7 "
       - "&eLeft Click - Deposit item with custom number"
       - "&eRight Click - Deposit all item in inventory"
@@ -104,7 +104,7 @@ items:
     material: HOPPER
     lore:
       - "&7 "
-      - "&f#item_amount#/#max_storage# Items"
+      - "&fAmount: &a#item_amount#"
       - "&7 "
       - "&eLeft Click - Withdraw item with custom number"
       - "&eRight Click - Withdraw all item to inventory"
@@ -141,7 +141,7 @@ items:
     material: PAPER
     lore:
       - "&7 "
-      - "&f#item_amount#/#max_storage# Items"
+      - "&fAmount: &a#item_amount#"
       - "&aAuto Sell: #autosell#"
       - "&7 "
       - "&eLeft Click - Sell item with custom number"

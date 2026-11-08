@@ -408,16 +408,6 @@ public class StorageAPI {
     }
 
     /**
-     * Get IMythicStorageManager implementation
-     *
-     * @return IMythicStorageManager instance
-     */
-    @NotNull
-    public static net.danh.storage.API.interfaces.IMythicStorageManager getMythicStorageManager() {
-        return net.danh.storage.API.impl.MythicStorageManagerImpl.getInstance();
-    }
-
-    /**
      * Reload API data from config files
      * This is called automatically when plugin reloads
      */

@@ -197,8 +197,23 @@ public class ItemManager {
             }
         }
 
+        if (section.getBoolean("hide-tooltip", false)) {
+            hideTooltip(meta);
+        }
+
         itemStack.setItemMeta(meta);
         return itemStack;
+    }
+
+    /**
+     * Hides the whole tooltip (decorations); older servers without the API keep the blank configured name.
+     */
+    private static void hideTooltip(ItemMeta meta) {
+        try {
+            ItemMeta.class.getMethod("setHideTooltip", boolean.class).invoke(meta, true);
+        } catch (ReflectiveOperationException | RuntimeException ignored) {
+            // Not available in this version.
+        }
     }
 
     private static void logInvalidMaterial(String material, ConfigurationSection section, String reason) {
@@ -305,6 +320,21 @@ public class ItemManager {
                 "#item_amount#", String.valueOf(MineManager.getPlayerBlock(playerName, material)),
                 "#max_storage#", String.valueOf(MineManager.getMaxStorage()),
                 "#sellable#", getStorageSellableSymbol(material));
+    }
+
+    /**
+     * Same as {@link #getItemConfigWithPlaceholders(Player, ConfigurationSection, String...)} but with the material
+     * picked by the caller; falls back to material_fallback (default CHEST) when the version lacks it.
+     */
+    public static ItemStack getItemConfigWithMaterial(Player p, ConfigurationSection section, String material,
+                                                      String... placeholders) {
+        ItemStack item = createBaseItem(section, material);
+        if (item == null || item.getType() == Material.AIR) {
+            item = createBaseItem(section, section.getString("material_fallback", "CHEST"));
+        }
+        if (item == null) return null;
+
+        return applyPlaceholders(p, item, section.getStringList("lore"), section.getString("name"), placeholders);
     }
 
     public static ItemStack getItemConfigWithPlaceholders(Player p, ConfigurationSection section, String... placeholders) {

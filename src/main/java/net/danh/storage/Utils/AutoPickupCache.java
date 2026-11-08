@@ -19,26 +19,11 @@ public final class AutoPickupCache {
     private static volatile Set<String> storageBlacklist = Collections.emptySet();
     private static volatile Set<String> storageFortuneWhitelist = Collections.emptySet();
 
-    // Ground store – Storage
-    private static volatile boolean storageGroundStoreActionBar = false;
-    private static volatile boolean storageGroundStoreTitleEnabled = false;
 
 
-    // MythicStorage (GroundStoreListener)
-    private static volatile boolean mythicActionBarEnabled = false;
-    private static volatile boolean mythicTitleEnabled = false;
-    private static volatile Set<String> mythicBlacklist = Collections.emptySet();
 
 
-    // CropStorage (CropBreak + GroundStoreListener)
-    private static volatile boolean cropActionBarEnabled = false;
-    private static volatile boolean cropTitleEnabled = false;
-    private static volatile Set<String> cropBlacklist = Collections.emptySet();
 
-    // MobStorage (MobDeath + GroundStoreListener)
-    private static volatile boolean mobActionBarEnabled = false;
-    private static volatile boolean mobTitleEnabled = false;
-    private static volatile Set<String> mobBlacklist = Collections.emptySet();
 
 
     // MMOItems autosmelt hook
@@ -51,9 +36,6 @@ public final class AutoPickupCache {
     public static void reload() {
         try {
             org.bukkit.configuration.file.FileConfiguration cfg = File.getConfig();
-            org.bukkit.configuration.file.FileConfiguration mythic = File.getMythicStorageConfig();
-            org.bukkit.configuration.file.FileConfiguration crop = File.getCropStorageConfig();
-            org.bukkit.configuration.file.FileConfiguration mob = File.getMobStorageConfig();
 
             //Storage
             preventRebreak = cfg.getBoolean("prevent_rebreak", false);
@@ -63,31 +45,6 @@ public final class AutoPickupCache {
             storageFortuneWhitelist = immutableSet(cfg.getStringList("whitelist_fortune"));
             mmoitemsAutoSmeltEnabled = cfg.getBoolean("hooks.mmoitems_autosmelt.enabled", true);
 
-            storageGroundStoreActionBar = cfg.getBoolean("mine.actionbar.enable", false)
-                    && cfg.getBoolean("ground_store.notification.actionbar.enable", true);
-            storageGroundStoreTitleEnabled = cfg.getBoolean("mine.title.enable", false)
-                    && cfg.getBoolean("ground_store.notification.title.enable", true);
-
-            //MythicStorage
-            mythicActionBarEnabled = mythic.getBoolean("notification.actionbar.enable", true)
-                    && mythic.getBoolean("ground_store.notification.actionbar.enable", true);
-            mythicTitleEnabled = mythic.getBoolean("notification.title.enable", false)
-                    && mythic.getBoolean("ground_store.notification.title.enable", true);
-            mythicBlacklist = immutableSet(mythic.getStringList("blacklist_world"));
-
-            //CropStorage
-            cropActionBarEnabled = crop.getBoolean("notification.actionbar.enable", false)
-                    && crop.getBoolean("ground_store.notification.actionbar.enable", true);
-            cropTitleEnabled = crop.getBoolean("notification.title.enable", false)
-                    && crop.getBoolean("ground_store.notification.title.enable", true);
-            cropBlacklist = immutableSet(crop.getStringList("blacklist_world"));
-
-            //MobStorage
-            mobActionBarEnabled = mob.getBoolean("notification.actionbar.enable", false)
-                    && mob.getBoolean("ground_store.notification.actionbar.enable", true);
-            mobTitleEnabled = mob.getBoolean("notification.title.enable", false)
-                    && mob.getBoolean("ground_store.notification.title.enable", true);
-            mobBlacklist = immutableSet(mob.getStringList("blacklist_world"));
 
             NotificationQueue.reload();
 
@@ -125,52 +82,8 @@ public final class AutoPickupCache {
         return mmoitemsAutoSmeltEnabled;
     }
 
-    public static boolean isStorageGroundStoreActionBarEnabled() {
-        return storageGroundStoreActionBar;
-    }
-
-    public static boolean isStorageGroundStoreTitleEnabled() {
-        return storageGroundStoreTitleEnabled;
-    }
-
-    public static boolean isMythicActionBarEnabled() {
-        return mythicActionBarEnabled;
-    }
-
-    public static boolean isMythicTitleEnabled() {
-        return mythicTitleEnabled;
-    }
-
-    public static boolean isCropActionBarEnabled() {
-        return cropActionBarEnabled;
-    }
-
-    public static boolean isCropTitleEnabled() {
-        return cropTitleEnabled;
-    }
-
-    public static boolean isMobActionBarEnabled() {
-        return mobActionBarEnabled;
-    }
-
-    public static boolean isMobTitleEnabled() {
-        return mobTitleEnabled;
-    }
-
     public static boolean isStorageWorldBlacklisted(@NotNull String worldName) {
         return !storageBlacklist.isEmpty() && storageBlacklist.contains(worldName);
-    }
-
-    public static boolean isMythicWorldBlacklisted(@NotNull String worldName) {
-        return !mythicBlacklist.isEmpty() && mythicBlacklist.contains(worldName);
-    }
-
-    public static boolean isCropWorldBlacklisted(@NotNull String worldName) {
-        return !cropBlacklist.isEmpty() && cropBlacklist.contains(worldName);
-    }
-
-    public static boolean isMobWorldBlacklisted(@NotNull String worldName) {
-        return !mobBlacklist.isEmpty() && mobBlacklist.contains(worldName);
     }
 
     public static boolean isFortuneWhitelisted(@NotNull String materialName) {

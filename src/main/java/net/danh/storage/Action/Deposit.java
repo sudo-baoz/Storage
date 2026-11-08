@@ -51,7 +51,7 @@ public class Deposit {
                 if (amount >= getAmount()) {
                     int old_data = MineManager.getPlayerBlock(getPlayer(), getMaterialData());
                     int new_data = old_data + Math.toIntExact(getAmount());
-                    int max_storage = MineManager.getMaxBlock(getPlayer());
+                    int max_storage = old_data + MineManager.getFreeSpace(getPlayer());
                     int count = max_storage - old_data;
                     int min = Math.min(count, Math.toIntExact(amount));
                     String material = getMaterialData();
@@ -109,7 +109,7 @@ public class Deposit {
             } else {
                 int old_data = MineManager.getPlayerBlock(getPlayer(), getMaterialData());
                 int new_data = old_data + amount;
-                int max_storage = MineManager.getMaxBlock(getPlayer());
+                int max_storage = old_data + MineManager.getFreeSpace(getPlayer());
                 int count = max_storage - old_data;
                 int min = Math.min(count, Math.toIntExact(amount));
                 String material = getMaterialData();

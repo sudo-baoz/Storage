@@ -200,28 +200,6 @@ class MessageIntegrityTest {
         String filePath = file.toString();
         String fileName = file.getFileName().toString();
 
-        if (filePath.contains("CMD" + separator + "handler" + separator + "mythic")) {
-            if (fileName.equals("MythicCommand.java")) {
-                return "mythicstorage.";
-            }
-            for (String line : lines) {
-                if (line.contains("extends MythicCommand")) {
-                    return "mythicstorage.";
-                }
-            }
-        }
-
-        if (filePath.contains("CMD" + separator + "handler" + separator + "crop")) {
-            if (fileName.equals("CropCommand.java")) {
-                return "cropstorage.";
-            }
-            for (String line : lines) {
-                if (line.contains("extends CropCommand")) {
-                    return "cropstorage.";
-                }
-            }
-        }
-
         return "";
     }
 
@@ -604,39 +582,6 @@ class MessageIntegrityTest {
                             "ACTION REQUIRED: Fix key usage in code OR fix value type in message.yml\n" +
                             "========================================",
                     invalidKeys.size(), report));
-        }
-    }
-
-    @Test
-    @DisplayName("MobStorage dynamic admin keys must exist in message.yml")
-    void testMobStorageDynamicAdminKeys() {
-        // MobStorageCommandManager.adminAmount builds message keys dynamically:
-        //   sendMessage(sender, "mobstorage.admin." + action + "_success", ...)
-        // (CMD/MobStorageCommandManager.java:463, routed actions: add/remove/set)
-        List<String> missingKeys = new ArrayList<>();
-        StringBuilder report = new StringBuilder();
-
-        for (String action : Arrays.asList("add", "remove", "set")) {
-            String key = "mobstorage.admin." + action + "_success";
-            if (!ymlKeys.contains(key)) {
-                missingKeys.add(key);
-                report.append("\n\nMISSING DYNAMIC KEY: \"").append(key).append("\"\n");
-                report.append("   Built from: \"mobstorage.admin.\" + action + \"_success\"\n");
-                report.append("   Used in: CMD/MobStorageCommandManager.java:463 (adminAmount)\n");
-            }
-        }
-
-        if (!missingKeys.isEmpty()) {
-            fail(String.format(
-                    "\n\n========================================\n" +
-                            "MOBSTORAGE DYNAMIC KEY CHECK FAILED\n" +
-                            "========================================\n" +
-                            "Found %d missing dynamic key(s) in message.yml!\n" +
-                            "%s\n" +
-                            "========================================\n" +
-                            "ACTION REQUIRED: Add the missing keys to src/main/resources/message.yml\n" +
-                            "========================================",
-                    missingKeys.size(), report));
         }
     }
 

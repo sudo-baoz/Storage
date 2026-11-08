@@ -1,8 +1,5 @@
 package net.danh.storage.Manager;
 
-import net.danh.storage.Manager.Crop.CropStorageManager;
-import net.danh.storage.Manager.Mob.MobStorageManager;
-import net.danh.storage.Manager.Mythic.MythicStorageManager;
 import net.danh.storage.Storage;
 import net.danh.storage.Utils.File;
 import net.danh.storage.Utils.SchedulerUtil;
@@ -92,15 +89,6 @@ public class AutoSaveManager {
             int playerCount = 0;
             for (Player player : Bukkit.getOnlinePlayers()) {
                 MineManager.savePlayerData(player);
-                if (MythicStorageManager.isSystemEnabled()) {
-                    MythicStorageManager.savePlayerData(player);
-                }
-                if (CropStorageManager.isSystemEnabled()) {
-                    CropStorageManager.savePlayerData(player);
-                }
-                if (MobStorageManager.isSystemEnabled()) {
-                    MobStorageManager.savePlayerData(player);
-                }
                 playerCount++;
             }
 

@@ -2,17 +2,12 @@ package net.danh.storage.GUI.listeners;
 
 import de.tr7zw.changeme.nbtapi.NBTItem;
 import net.danh.storage.GUI.Crafting.RecipeEditorGUI;
-import net.danh.storage.GUI.Crop.CropStorageGUI;
 import net.danh.storage.GUI.GUI;
-import net.danh.storage.GUI.Mob.MobStorageGUI;
-import net.danh.storage.GUI.Mythic.MythicStorageGUI;
-import net.danh.storage.GUI.Mythic.ViewMythicStorageGUI;
 import net.danh.storage.GUI.PersonalStorage;
 import net.danh.storage.GUI.ViewStorageGUI;
 import net.danh.storage.GUI.manager.IGUI;
 import net.danh.storage.GUI.manager.InteractiveItem;
 import net.danh.storage.Manager.MineManager;
-import net.danh.storage.Manager.Mythic.MythicStorageManager;
 import net.danh.storage.Manager.SoundManager;
 import net.danh.storage.Storage;
 import net.danh.storage.Utils.File;
@@ -127,6 +122,23 @@ public class GUIClickListener implements Listener {
         }
     }
 
+    /**
+     * Dragging items across a GUI would place them into the menu inventory, where they are lost or duplicated.
+     */
+    @EventHandler
+    public void onInventoryDrag(org.bukkit.event.inventory.InventoryDragEvent e) {
+        Inventory top = e.getView().getTopInventory();
+        if (!(top.getHolder() instanceof IGUI)) {
+            return;
+        }
+        for (int rawSlot : e.getRawSlots()) {
+            if (rawSlot < top.getSize()) {
+                e.setCancelled(true);
+                return;
+            }
+        }
+    }
+
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         ItemStack item = e.getItem();
@@ -228,9 +240,7 @@ public class GUIClickListener implements Listener {
 
         if (e.getInventory().getHolder() instanceof IGUI) {
             if (e.getInventory().getHolder() instanceof PersonalStorage
-                    || e.getInventory().getHolder() instanceof MobStorageGUI
-                    || e.getInventory().getHolder() instanceof CropStorageGUI
-                    || e.getInventory().getHolder() instanceof MythicStorageGUI) {
+                    || e.getInventory().getHolder() instanceof net.danh.storage.GUI.StorageToolGUI) {
                 for (ItemStack item : e.getInventory().getContents()) {
                     if (item == null || item.getType() == Material.AIR) continue;
                     try {
@@ -260,12 +270,6 @@ public class GUIClickListener implements Listener {
             if (e.getInventory().getHolder() instanceof ViewStorageGUI gui) {
                 if (gui.getTarget() == null) {
                     MineManager.cleanupOfflinePlayerData(gui.getTargetName());
-                }
-            }
-
-            if (e.getInventory().getHolder() instanceof ViewMythicStorageGUI gui) {
-                if (gui.getTarget() == null) {
-                    MythicStorageManager.cleanupOfflinePlayerData(gui.getTargetName());
                 }
             }
 

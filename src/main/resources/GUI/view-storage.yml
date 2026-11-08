@@ -33,7 +33,7 @@ items:
     # Lore for item in storage
     lore:
       - "&7 "
-      - "&f#item_amount#/#max_storage# Items"
+      - "&fAmount: &a#item_amount#"
       - "&7 "
       - "&eRead-only - Cannot be modified"
     # Amount of item

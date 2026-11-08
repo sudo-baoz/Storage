@@ -17,9 +17,6 @@ import java.util.stream.Collectors;
 public final class NotificationQueue {
 
     public static final String TYPE_STORAGE = "storage";
-    public static final String TYPE_MYTHIC = "mythic";
-    public static final String TYPE_CROP = "crop";
-    public static final String TYPE_MOB = "mob";
 
     // Flush this long after the last pickup (~2 ticks, imperceptible)
     private static final long QUIET_MILLIS = 100L;
@@ -139,12 +136,8 @@ public final class NotificationQueue {
         switch (type) {
             case TYPE_STORAGE:
                 return File.getConfig();
-            case TYPE_MYTHIC:
-                return File.getMythicStorageConfig();
-            case TYPE_CROP:
-                return File.getCropStorageConfig();
             default:
-                return File.getMobStorageConfig();
+                return File.getConfig();
         }
     }
 
