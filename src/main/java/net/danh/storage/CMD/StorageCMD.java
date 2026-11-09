@@ -1,6 +1,7 @@
 package net.danh.storage.CMD;
 
 import net.danh.storage.API.CMDBase;
+import net.danh.storage.Manager.LanguageManager;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,11 +18,21 @@ public class StorageCMD extends CMDBase {
 
     @Override
     public void execute(@NotNull CommandSender sender, String[] args) {
-        commandManager.handleCommand(sender, args);
+        LanguageManager.setContext(sender);
+        try {
+            commandManager.handleCommand(sender, args);
+        } finally {
+            LanguageManager.clearContext();
+        }
     }
 
     @Override
     public List<String> TabComplete(@NotNull CommandSender sender, String[] args) {
-        return commandManager.getTabCompletions(sender, args);
+        LanguageManager.setContext(sender);
+        try {
+            return commandManager.getTabCompletions(sender, args);
+        } finally {
+            LanguageManager.clearContext();
+        }
     }
 }

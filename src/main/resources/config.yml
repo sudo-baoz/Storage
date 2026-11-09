@@ -2,7 +2,7 @@
 #If you encounter any issues, please report them to me at: https://github.com/TheBlueSkyARL/Storage/issues
 
 #Do not touch it
-config_version: 9
+config_version: 10
 
 #Database configuration
 database:
@@ -503,3 +503,18 @@ storage_upgrade:
       capacity: 1000000
       cost: 400000
       permission: ""
+
+# Languages: files live in plugins/Storage/lang/<code>.yml (UTF-8). Add a file there and list its code below
+# to support another language; players choose with /storage lang <code>.
+language:
+  # Server default (also used for the console)
+  default: "vi_VN"
+  available:
+    - "en_US"
+    - "vi_VN"
+  # Let every player choose their own language
+  per-player: true
+  # Use the Minecraft client language for players who have not chosen one
+  use-client-locale: false
+  # Used when a key is missing in the selected language
+  fallback: "en_US"

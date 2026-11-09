@@ -143,7 +143,7 @@ public class TransferGUI implements IGUI {
 
         try {
             ItemStack baseItem = ItemManager.getItemConfig(player, material, materialName, section);
-            baseItem = ItemManager.replaceLore(baseItem, section.getStringList("lore"),
+            baseItem = ItemManager.replaceLore(baseItem, net.danh.storage.Manager.LanguageManager.guiList(section, "lore"),
                     "#material_name#", materialName,
                     "#current_amount#", String.valueOf(currentAmount),
                     "#transfer_amount#", String.valueOf(transferAmount));
@@ -157,7 +157,7 @@ public class TransferGUI implements IGUI {
         } catch (Exception e) {
             // Fallback to basic item if material creation fails
             ItemStack fallbackItem = ItemManager.getItemConfig(player, section);
-            fallbackItem = ItemManager.replaceLore(fallbackItem, section.getStringList("lore"),
+            fallbackItem = ItemManager.replaceLore(fallbackItem, net.danh.storage.Manager.LanguageManager.guiList(section, "lore"),
                     "#material_name#", materialName,
                     "#current_amount#", String.valueOf(currentAmount),
                     "#transfer_amount#", String.valueOf(transferAmount));
@@ -173,7 +173,7 @@ public class TransferGUI implements IGUI {
 
     private InteractiveItem createPlayerInfoItem(ConfigurationSection section, int slot) {
         ItemStack baseItem = ItemManager.getItemConfig(player, section);
-        baseItem = ItemManager.replaceLore(baseItem, section.getStringList("lore"),
+        baseItem = ItemManager.replaceLore(baseItem, net.danh.storage.Manager.LanguageManager.guiList(section, "lore"),
                 "#player#", targetPlayer);
         baseItem = ItemManager.replacePlaceholders(baseItem, "#player#", targetPlayer);
         baseItem = ItemManager.setPlayerSkull(baseItem, targetPlayer);
@@ -184,7 +184,7 @@ public class TransferGUI implements IGUI {
     private InteractiveItem createConfirmItem(ConfigurationSection section, int slot) {
         String materialName = getMaterialDisplayName();
         ItemStack baseItem = ItemManager.getItemConfig(player, section);
-        baseItem = ItemManager.replaceLore(baseItem, section.getStringList("lore"),
+        baseItem = ItemManager.replaceLore(baseItem, net.danh.storage.Manager.LanguageManager.guiList(section, "lore"),
                 "#transfer_amount#", String.valueOf(transferAmount),
                 "#material_name#", materialName,
                 "#player#", targetPlayer);
@@ -213,7 +213,7 @@ public class TransferGUI implements IGUI {
 
     private InteractiveItem createAmountDecreaseItem(ConfigurationSection section, int slot) {
         ItemStack baseItem = ItemManager.getItemConfig(player, section);
-        baseItem = ItemManager.replaceLore(baseItem, section.getStringList("lore"),
+        baseItem = ItemManager.replaceLore(baseItem, net.danh.storage.Manager.LanguageManager.guiList(section, "lore"),
                 "#transfer_amount#", String.valueOf(transferAmount));
 
         InteractiveItem item = new InteractiveItem(baseItem, slot);
@@ -226,7 +226,7 @@ public class TransferGUI implements IGUI {
 
     private InteractiveItem createAmountIncreaseItem(ConfigurationSection section, int slot) {
         ItemStack baseItem = ItemManager.getItemConfig(player, section);
-        baseItem = ItemManager.replaceLore(baseItem, section.getStringList("lore"),
+        baseItem = ItemManager.replaceLore(baseItem, net.danh.storage.Manager.LanguageManager.guiList(section, "lore"),
                 "#transfer_amount#", String.valueOf(transferAmount));
 
         InteractiveItem item = new InteractiveItem(baseItem, slot);
@@ -250,7 +250,7 @@ public class TransferGUI implements IGUI {
     private InteractiveItem createAmountMaxItem(ConfigurationSection section, int slot) {
         int currentAmount = MineManager.getPlayerBlock(player, material);
         ItemStack baseItem = ItemManager.getItemConfig(player, section);
-        baseItem = ItemManager.replaceLore(baseItem, section.getStringList("lore"),
+        baseItem = ItemManager.replaceLore(baseItem, net.danh.storage.Manager.LanguageManager.guiList(section, "lore"),
                 "#current_amount#", String.valueOf(currentAmount));
 
         InteractiveItem item = new InteractiveItem(baseItem, slot);

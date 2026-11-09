@@ -52,6 +52,15 @@ public class GUIClickListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
+        net.danh.storage.Manager.LanguageManager.setContext(e.getWhoClicked());
+        try {
+            handleInventoryClick(e);
+        } finally {
+            net.danh.storage.Manager.LanguageManager.clearContext();
+        }
+    }
+
+    private void handleInventoryClick(InventoryClickEvent e) {
         Player player = (Player) e.getWhoClicked();
 
         boolean isGUIInv = e.getClickedInventory() != null && e.getClickedInventory().getHolder() != null

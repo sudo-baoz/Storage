@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MessageIntegrityTest {
 
     private static final Path SOURCE_ROOT = Paths.get("src/main/java");
-    private static final Path MESSAGE_YML = Paths.get("src/main/resources/message.yml");
+    private static final Path MESSAGE_YML = Paths.get("src/main/resources/lang/en_US.yml");
 
     // Patterns to extract message keys from Java source code
     // Pattern 1: File.getMessage().getString("key") or File.getMessage().getString("key", default)

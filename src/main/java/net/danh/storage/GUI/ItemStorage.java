@@ -50,7 +50,7 @@ public class ItemStorage implements IGUI {
     public Inventory getInventory(SoundContext context) {
         SoundManager.playItemSound(p, config, "gui_open_sound", context);
         Inventory inventory = Bukkit.createInventory(this, config.getInt("size") * 9,
-                ChatUtils.colorizewp(p, Objects.requireNonNull(config.getString("title"))
+                ChatUtils.colorizewp(p, Objects.requireNonNull(net.danh.storage.Manager.LanguageManager.guiString(config, "title"))
                         .replace("#player#", p.getName())
                         .replace("#material#", Objects.requireNonNull(File.getConfig()
                                 .getString("items." + material,

@@ -167,7 +167,7 @@ public class RecipeEditorGUI implements IGUI {
         SoundManager.playItemSound(player, config, "gui_open_sound", context);
 
         String title = ChatUtils.colorizewp(player, Objects.requireNonNull(
-                config.getString("title")).replace("#recipe_name#",
+                net.danh.storage.Manager.LanguageManager.guiString(config, "title")).replace("#recipe_name#",
                 recipe.getName()));
         Inventory inventory = Bukkit.createInventory(this, config.getInt("size") * 9, title);
 
@@ -292,7 +292,7 @@ public class RecipeEditorGUI implements IGUI {
 
         // Unbreakable toggle
         ItemStack unbreakableItem = createConfigItem("items.toggle_unbreakable",
-                "#status#", recipe.isResultUnbreakable() ? "&aEnabled" : "&cDisabled");
+                "#status#", File.getMessage().getString(recipe.isResultUnbreakable() ? "crafting.status_enabled" : "crafting.status_disabled"));
         if (unbreakableItem != null) {
             setupInteractiveItem(inventory, "items.toggle_unbreakable", 20, unbreakableItem,
                     item -> item.onLeftClick(p -> toggleUnbreakable(p)));
@@ -358,7 +358,7 @@ public class RecipeEditorGUI implements IGUI {
         // Recipe settings button
         ItemStack settingsItem = createConfigItem("items.recipe_settings",
                 "#category#", recipe.getCategory(),
-                "#status#", recipe.isEnabled() ? "&aEnabled" : "&cDisabled");
+                "#status#", File.getMessage().getString(recipe.isEnabled() ? "crafting.status_enabled" : "crafting.status_disabled"));
         if (settingsItem != null) {
             setupInteractiveItem(inventory, "items.recipe_settings", 48, settingsItem,
                     item -> item.onLeftClick(p -> editRecipeSettings(p)));
@@ -454,7 +454,7 @@ public class RecipeEditorGUI implements IGUI {
 
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                String displayName = section.getString("name");
+                String displayName = net.danh.storage.Manager.LanguageManager.guiString(section, "name");
                 if (displayName != null) {
                     for (int i = 0; i < placeholders.length - 1; i += 2) {
                         displayName = displayName.replace(placeholders[i], placeholders[i + 1]);
@@ -462,7 +462,7 @@ public class RecipeEditorGUI implements IGUI {
                     meta.setDisplayName(ChatUtils.colorizewp(displayName));
                 }
 
-                List<String> lore = section.getStringList("lore");
+                List<String> lore = net.danh.storage.Manager.LanguageManager.guiList(section, "lore");
                 if (lore != null && !lore.isEmpty()) {
                     List<String> processedLore = new ArrayList<>();
                     for (String line : lore) {
@@ -632,7 +632,7 @@ public class RecipeEditorGUI implements IGUI {
     private void deleteRecipe(Player player) {
         // Mark as navigating to confirmation GUI
         setShouldRestoreOnClose(player, false);
-        String message = "Delete recipe: &e" + recipe.getName() + "&7?";
+        String message = File.getMessage().getString("crafting.delete_confirm", "#recipe#").replace("#recipe#", recipe.getName());
 
         SoundManager.setShouldPlayCloseSound(player, false);
         player.openInventory(new ConfirmationGUI(player, message,

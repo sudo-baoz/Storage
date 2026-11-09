@@ -188,7 +188,7 @@ public class RecipeListGUI implements IGUI {
             if (line.contains("#requirements#")) {
                 List<String> requirementLines = createRequirementLines(recipe);
                 if (requirementLines.isEmpty()) {
-                    processedLore.add(ChatUtils.colorizewp(line.replace("#requirements#", "&7No requirements")));
+                    processedLore.add(ChatUtils.colorizewp(line.replace("#requirements#", File.getMessage().getString("crafting.no_requirements", ""))));
                 } else {
                     for (String reqLine : requirementLines) {
                         processedLore.add(ChatUtils.colorizewp(reqLine));

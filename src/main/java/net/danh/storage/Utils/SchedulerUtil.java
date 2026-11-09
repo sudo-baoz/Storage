@@ -28,6 +28,7 @@ public class SchedulerUtil {
     }
 
     public static void runTask(Plugin plugin, Runnable task) {
+        task = net.danh.storage.Manager.LanguageManager.carryContext(task);
         if (IS_FOLIA) {
             try {
                 runGlobalTask(plugin, task);
@@ -40,6 +41,7 @@ public class SchedulerUtil {
     }
 
     public static void runTask(Plugin plugin, Entity entity, Runnable task) {
+        task = net.danh.storage.Manager.LanguageManager.carryContext(task);
         if (IS_FOLIA && entity != null) {
             try {
                 runEntityTask(plugin, entity, task);
@@ -52,6 +54,7 @@ public class SchedulerUtil {
     }
 
     public static void runTask(Plugin plugin, Location location, Runnable task) {
+        task = net.danh.storage.Manager.LanguageManager.carryContext(task);
         if (IS_FOLIA && location != null && location.getWorld() != null) {
             try {
                 runRegionTask(plugin, location, task);
@@ -64,6 +67,7 @@ public class SchedulerUtil {
     }
 
     public static void runTaskLater(Plugin plugin, Runnable task, long delayTicks) {
+        task = net.danh.storage.Manager.LanguageManager.carryContext(task);
         if (IS_FOLIA) {
             try {
                 runGlobalTaskLater(plugin, task, delayTicks);
@@ -76,6 +80,7 @@ public class SchedulerUtil {
     }
 
     public static void runTaskLater(Plugin plugin, Entity entity, Runnable task, long delayTicks) {
+        task = net.danh.storage.Manager.LanguageManager.carryContext(task);
         if (IS_FOLIA && entity != null) {
             try {
                 runEntityTaskLater(plugin, entity, task, delayTicks);
@@ -88,6 +93,7 @@ public class SchedulerUtil {
     }
 
     public static void runTaskLater(Plugin plugin, Location location, Runnable task, long delayTicks) {
+        task = net.danh.storage.Manager.LanguageManager.carryContext(task);
         if (IS_FOLIA && location != null && location.getWorld() != null) {
             try {
                 runRegionTaskLater(plugin, location, task, delayTicks);
@@ -100,6 +106,7 @@ public class SchedulerUtil {
     }
 
     public static void runTaskAsynchronously(Plugin plugin, Runnable task) {
+        task = net.danh.storage.Manager.LanguageManager.carryContext(task);
         if (IS_FOLIA) {
             try {
                 Object asyncScheduler = Bukkit.class.getMethod("getAsyncScheduler").invoke(null);

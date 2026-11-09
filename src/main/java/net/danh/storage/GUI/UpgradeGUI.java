@@ -2,6 +2,7 @@ package net.danh.storage.GUI;
 
 import net.danh.storage.Manager.Island.IslandStorageManager;
 import net.danh.storage.Manager.ItemManager;
+import net.danh.storage.Manager.LanguageManager;
 import net.danh.storage.Manager.MineManager;
 import net.danh.storage.Manager.StorageSettings;
 import net.danh.storage.Manager.StorageUpgrade;
@@ -39,13 +40,13 @@ public class UpgradeGUI extends StorageToolGUI {
         if (upgrade != null) {
             String status;
             if (!StorageUpgrade.isEnabled()) {
-                status = upgrade.getString("status_disabled", "");
+                status = LanguageManager.guiString(upgrade, "status_disabled");
             } else if (next > maxLevel) {
-                status = upgrade.getString("status_max", "");
+                status = LanguageManager.guiString(upgrade, "status_max");
             } else if (!IslandStorageManager.isOwnerOrSolo(player)) {
-                status = upgrade.getString("status_owner", "");
+                status = LanguageManager.guiString(upgrade, "status_owner");
             } else {
-                status = upgrade.getString("status_available", "");
+                status = LanguageManager.guiString(upgrade, "status_available");
             }
             boolean hasNext = StorageUpgrade.isEnabled() && next <= maxLevel;
             put(inventory, upgrade.getInt("slot"), ItemManager.getItemConfigWithPlaceholders(player, upgrade,
@@ -72,6 +73,6 @@ public class UpgradeGUI extends StorageToolGUI {
     }
 
     static String format(long value) {
-        return String.format(java.util.Locale.US, "%,d", value);
+        return net.danh.storage.Manager.LanguageManager.formatNumber(value);
     }
 }

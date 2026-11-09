@@ -270,7 +270,7 @@ public class ItemManager {
         ItemStack item = createBaseItem(section, null);
         if (item == null) return null;
 
-        return applyPlaceholders(null, item, section.getStringList("lore"), section.getString("name"));
+        return applyPlaceholders(null, item, LanguageManager.guiList(section, "lore"), LanguageManager.guiString(section, "name"));
     }
 
     public static ItemStack getItemConfig(Player p, String material, ConfigurationSection section) {
@@ -279,7 +279,7 @@ public class ItemManager {
 
         String materialName = File.getConfig().getString("items." + material, material.split(";")[0]);
 
-        return applyPlaceholders(p, item, section.getStringList("lore"), section.getString("name"),
+        return applyPlaceholders(p, item, LanguageManager.guiList(section, "lore"), LanguageManager.guiString(section, "name"),
                 "#item_amount#", String.valueOf(MineManager.getPlayerBlock(p, material)),
                 "#max_storage#", String.valueOf(MineManager.getMaxBlock(p)),
                 "#material#", materialName,
@@ -297,7 +297,7 @@ public class ItemManager {
         ItemStack item = createBaseItem(section, null);
         if (item == null) return null;
 
-        return applyPlaceholders(p, item, section.getStringList("lore"), section.getString("name"),
+        return applyPlaceholders(p, item, LanguageManager.guiList(section, "lore"), LanguageManager.guiString(section, "name"),
                 "#status#", getStatus(p));
     }
 
@@ -305,7 +305,7 @@ public class ItemManager {
         ItemStack item = createBaseItem(section, material.split(";")[0]);
         if (item == null) return null;
 
-        return applyPlaceholders(p, item, section.getStringList("lore"), name,
+        return applyPlaceholders(p, item, LanguageManager.guiList(section, "lore"), name,
                 "#item_amount#", String.valueOf(MineManager.getPlayerBlock(p, material)),
                 "#max_storage#", String.valueOf(MineManager.getMaxBlock(p)),
                 "#sellable#", getStorageSellableSymbol(material),
@@ -316,7 +316,7 @@ public class ItemManager {
         ItemStack item = createBaseItem(section, material.split(";")[0]);
         if (item == null) return null;
 
-        return applyPlaceholders(null, item, section.getStringList("lore"), name,
+        return applyPlaceholders(null, item, LanguageManager.guiList(section, "lore"), name,
                 "#item_amount#", String.valueOf(MineManager.getPlayerBlock(playerName, material)),
                 "#max_storage#", String.valueOf(MineManager.getMaxStorage()),
                 "#sellable#", getStorageSellableSymbol(material));
@@ -334,14 +334,14 @@ public class ItemManager {
         }
         if (item == null) return null;
 
-        return applyPlaceholders(p, item, section.getStringList("lore"), section.getString("name"), placeholders);
+        return applyPlaceholders(p, item, LanguageManager.guiList(section, "lore"), LanguageManager.guiString(section, "name"), placeholders);
     }
 
     public static ItemStack getItemConfigWithPlaceholders(Player p, ConfigurationSection section, String... placeholders) {
         ItemStack item = createBaseItem(section, null);
         if (item == null) return null;
 
-        return applyPlaceholders(p, item, section.getStringList("lore"), section.getString("name"), placeholders);
+        return applyPlaceholders(p, item, LanguageManager.guiList(section, "lore"), LanguageManager.guiString(section, "name"), placeholders);
     }
 
     public static ItemStack getItemConfigWithPlaceholders(Player p, String material, String name, ConfigurationSection section, String... placeholders) {
@@ -363,7 +363,7 @@ public class ItemManager {
             System.arraycopy(placeholders, 0, merged, baseLength, extraLength);
         }
 
-        return applyPlaceholders(p, item, section.getStringList("lore"), name,
+        return applyPlaceholders(p, item, LanguageManager.guiList(section, "lore"), name,
                 merged);
     }
 
@@ -386,7 +386,7 @@ public class ItemManager {
             merged = basePlaceholders;
         }
 
-        return applyPlaceholders(null, item, section.getStringList("lore"), name, merged);
+        return applyPlaceholders(null, item, LanguageManager.guiList(section, "lore"), name, merged);
     }
 
     public static ItemStack getItemConfigWithPlaceholders(String playerName, String material, String name, ConfigurationSection section, String... placeholders) {
@@ -406,7 +406,7 @@ public class ItemManager {
             System.arraycopy(placeholders, 0, merged, baseLength, extraLength);
         }
 
-        return applyPlaceholders(null, item, section.getStringList("lore"), name, merged);
+        return applyPlaceholders(null, item, LanguageManager.guiList(section, "lore"), name, merged);
     }
 
     @Deprecated

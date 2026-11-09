@@ -1,0 +1,1294 @@
+admin:
+  new_version_available: "#prefix# &6&lCó phiên bản mới! Bạn đang dùng &e&lv#old_version#&6&l, phiên bản mới &e&lv#new_version#"
+  add_material_amount: "#prefix# &bĐã thêm &6#amount# #material# &bcho &e#player#"
+  remove_material_amount: "#prefix# &bĐã xóa &6#amount# #material# &btừ &e#player#"
+  reload: "#prefix# &eĐã tải lại các file"
+  set_max_storage: "#prefix# &aĐã đặt dung lượng kho tối đa của &e#player# &athành &b#amount#"
+  reset_limit_storage: "#prefix# &aĐã đặt lại giới hạn kho của &e#player# &athành mặc định/theo quyền"
+  set_material_amount: "#prefix# &cĐã đặt &a#amount# #material# &ccho &e#player#"
+  reset_self_all: "#prefix# &bĐã đặt lại toàn bộ vật phẩm trong kho của bạn"
+  reset_self_material: "#prefix# &bĐã đặt lại #material# &btrong kho của bạn"
+  reset_target_all: "#prefix# &bĐã đặt lại toàn bộ vật phẩm trong kho của &e#player#"
+  reset_target_material: "#prefix# &bĐã đặt lại #material# &bcủa &e#player#"
+  reset_target_all_notify: "#prefix# &cKho của bạn đã bị &e#player# &cđặt lại"
+  reset_target_material_notify: "#prefix# &c#material# &ctrong kho của bạn đã bị &e#player# &cđặt lại"
+  not_enough_slot: "#prefix# &cBạn cần thêm slot trong GUI/storage.yml -> storage_item để mở giao diện này. Số slot không đủ cho các vật phẩm bạn đã cấu hình"
+  only_players: "&cChỉ người chơi mới dùng được lệnh này"
+  no_permission: "#prefix# &cBạn không có quyền sử dụng lệnh này"
+  unknown_command: "#prefix# &cLệnh '&e#command#&c' không tồn tại. Gõ &e/storage help &cđể xem các lệnh."
+  invalid_usage: "#prefix# &cSai cú pháp! &eCách dùng: #usage#"
+  invalid_material: "#prefix# &cVật phẩm '&e#material#&c' không hợp lệ! Các vật phẩm có sẵn: &7#materials#"
+  invalid_player: "#prefix# &cKhông tìm thấy người chơi '&e#player#&c' hoặc họ không online!"
+  invalid_number: "#prefix# &c'&e#number#&c' không phải là số hợp lệ!"
+  number_too_low: "#prefix# &cSố phải lớn hơn 0!"
+  available_commands: "#prefix# &eCác lệnh có sẵn: &7#commands#"
+  world_blacklisted: "#prefix# &cTính năng #feature# &cbị tắt ở thế giới &e#world#&c!"
+  autosave:
+    status_header: "&6=== Trạng thái tự động lưu ==="
+    enabled: "&7Bật: #status#"
+    running: "&7Đang chạy: #status#"
+    interval: "&7Chu kỳ: &e#minutes# &7phút"
+    async: "&7Bất đồng bộ: #status#"
+    log_activity: "&7Ghi log hoạt động: #status#"
+    force_save_completed: "#prefix# &aĐã lưu ngay dữ liệu của tất cả người chơi đang online"
+    started: "#prefix# &aTự động lưu &7đã bắt đầu, chu kỳ: &6#minutes# &7phút"
+    stopped: "#prefix# &aTự động lưu &cđã dừng"
+    completed: "#prefix# &aTự động lưu &7hoàn tất cho &6#count# &7người chơi"
+    error: "#prefix# &cLỗi khi &etự động lưu: #error#"
+    manual_executed: "#prefix# &7Đã lưu thủ công"
+  help:
+  - "&6=== &eLệnh quản trị Storage &6v2.3.9 &6==="
+  - "&e/Storage reload &f- &7Tải lại các file"
+  - "&e/Storage max &a<người chơi> &6<số lượng> &f- &7Đặt dung lượng kho tối đa của người chơi"
+  - "&e/Storage resetlimit &a<người chơi> &f- &7Bỏ giới hạn admin đã đặt, dùng theo quyền/mặc định"
+  - "&e/Storage add &b<material;data> &a<người chơi> &6<số lượng> &f- &7Thêm vật phẩm cho người chơi (data dành cho 1.12.2 trở xuống, bản 1.13+ dùng <material>;0"
+  - "&e/Storage remove &b<material;data> &a<người chơi> &6<số lượng> &f- &7Xóa vật phẩm của người chơi (data dành cho 1.12.2 trở xuống, bản 1.13+ dùng <material>;0"
+  - "&e/Storage set &b<material;data> &a<người chơi> &6<số lượng> &f- &7Đặt số lượng vật phẩm của người chơi (data dành cho 1.12.2 trở xuống, bản 1.13+ dùng <material>;0"
+  - "&e/Storage reset &b<material|all> &a<người chơi> &f- &7Đặt lại vật phẩm trong kho của người chơi (lưu ý: nếu không ghi người chơi hoặc chỉ ghi vật phẩm thì sẽ đặt lại kho của chính bạn)"
+  - "&e/Storage autosave &f- &7Xem trạng thái tự động lưu"
+  - "&e/Storage crafteditor &f- &7Mở giao diện chỉnh công thức chế tạo"
+  - "&e/Storage save &f- &7Lưu ngay dữ liệu của mọi người chơi"
+  - "&e/Storage event &b<start|stop|list> &f- &7Quản lý sự kiện"
+  - "&e/Storage enchant &b<give|remove|list|info|setmaxlevel> &f- &7Quản lý phù phép tùy chỉnh"
+  transfer_commands:
+    error_opening_gui: "#prefix# &cLỗi khi mở giao diện chuyển đồ, hãy chỉ định người chơi và vật phẩm hợp lệ (nếu chuyển nhiều loại, chỉ cần ghi người chơi)."
+user:
+  full_storage: "#prefix# &cKho đã đầy, hãy lấy bớt đồ ra để tiếp tục đào"
+  add_material_amount: "#prefix# &a+ #amount# #material# &7[Từ #player#]"
+  remove_material_amount: "#prefix# &c- #amount# #material# &7[Từ #player#]"
+  set_material_amount: "#prefix# &c[~] #amount# #material# &7[Từ #player#]"
+  not_enough_items: "#prefix# &cBạn không đủ vật phẩm, bạn chỉ có <amount>"
+  not_enough_slot: "#prefix# &cBạn không đủ ô trống để rút đồ, bạn chỉ có thể chứa <slots> vật phẩm"
+  unknown_number: "#prefix# &c'<number>' không phải là số hợp lệ!"
+  chat_input_cancelled: "&7Đã hủy nhập chat. Đang quay lại giao diện..."
+  sellable:
+    "yes": "&a✔"
+    "no": "&c✘"
+  autosell:
+    "yes": "&a✔"
+    "no": "&c✘"
+    toggle_on: "#prefix# &aĐã bật Tự động bán cho &e#material#"
+    toggle_off: "#prefix# &cĐã tắt Tự động bán cho &e#material#"
+    status: "#prefix# &aTự động bán &e#material#&a: #status#"
+    list: "#prefix# &aCác vật phẩm tự động bán: &f#items#"
+    list_empty: "#prefix# &7Chưa bật tự động bán cho vật phẩm nào."
+    system_disabled: "#prefix# &cHệ thống tự động bán đã bị tắt trong cấu hình máy chủ."
+    cleared: "#prefix# &aĐã xóa &e#count# &avật phẩm tự động bán."
+  island:
+    sell_denied: "#prefix# &cChủ đảo chưa cho phép bạn bán đồ từ kho đảo."
+    disabled: "#prefix# &cKho đảo chưa được kích hoạt trên máy chủ này."
+    not_in_island: "#prefix# &cBạn không ở trong đảo nào."
+    not_owner: "#prefix# &cChỉ chủ đảo mới quản lý được quyền của thành viên."
+    not_member: "#prefix# &e#player# &ckhông phải thành viên đảo của bạn."
+    cannot_target_owner: "#prefix# &cChủ đảo luôn được phép bán."
+    status_yes: "&a✔"
+    status_no: "&c✘"
+    info_header: "#prefix# &aKho đảo &7(dùng chung cho mọi thành viên) &acủa &e#owner#"
+    info_you: "#prefix# &7Bạn là &e#role#&7. Bán đồ: #status#"
+    info_member: "&7 - &e#player# &7| Bán đồ: #status#"
+    sell_allowed: "#prefix# &e#player# &ađã được phép bán đồ từ kho đảo."
+    sell_revoked: "#prefix# &e#player# &ckhông còn được bán đồ từ kho đảo."
+    role_owner: "chủ đảo"
+    role_member: "thành viên"
+  action:
+    deposit:
+      full_storage: "#prefix# &cKho đã đầy &8(sức chứa #max_storage#)&c, bạn không thể gửi #amount# #material#!"
+      chat_number: "#prefix# &aBạn muốn gửi bao nhiêu vật phẩm? &7(Gõ 'cancel' để thoát)"
+      deposit_item: "#prefix# &aBạn đã gửi #amount# #material# | #item_amount# vật phẩm"
+      invalid_item: "#prefix# &cVật phẩm không hợp lệ! Không thể gửi vật phẩm này."
+    withdraw:
+      chat_number: "#prefix# &aBạn muốn rút bao nhiêu vật phẩm? &7(Gõ 'cancel' để thoát)"
+      withdraw_item: "#prefix# &aBạn đã rút #amount# #material# | #item_amount# vật phẩm"
+      cannot_create_item: "#prefix# &cKhông thể tạo vật phẩm! Hãy liên hệ quản trị viên."
+      not_enough_in_storage: "#prefix# &cBạn không có đủ #material# trong kho! Bạn chỉ có #amount# vật phẩm."
+      inventory_full: "#prefix# &cTúi đồ đã đầy! Hãy dọn chỗ để rút vật phẩm."
+    sell:
+      chat_number: "#prefix# &aBạn muốn bán bao nhiêu vật phẩm? &7(Gõ 'cancel' để thoát)"
+      can_not_sell: "#prefix# &cVật phẩm này không thể bán"
+      sell_item: "#prefix# &aBạn đã bán #amount# #material# và nhận #money#$ | #item_amount# vật phẩm"
+      no_worth_config: "#prefix# &cHệ thống bán chưa được cấu hình! Hãy liên hệ quản trị viên."
+      item_not_sellable: "#prefix# &cVật phẩm này không bán được! Hãy xem danh sách vật phẩm có thể bán."
+      failed_to_remove: "#prefix# &cKhông thể lấy vật phẩm khỏi kho! Hãy thử lại."
+      payout_error: "#prefix# &cĐã xảy ra lỗi khi thanh toán cho bạn. Đang thử khắc phục..."
+      payout_fixed: "#prefix# &aĐã khắc phục! Bạn đã nhận được tiền."
+      playerpoints:
+        payout_error: "#prefix# &cĐã xảy ra lỗi khi cộng điểm cho bạn. Đang thử khắc phục..."
+        payout_fixed: "#prefix# &aĐã khắc phục! Bạn đã nhận được điểm."
+  status:
+    status_on: "&aBật"
+    status_off: "&cTắt"
+    toggle: "#prefix# &bKho của bạn đã được chuyển trạng thái: #status#"
+    item_toggle: "#prefix# &bTự động nhặt &e#item#&b: #status# &7(Lưu ý: nếu tính năng không hoạt động, hãy chắc chắn bạn đã bật /storage toggle)."
+  help:
+  - "&6=== &eLệnh Storage &6v2.3.9 &6==="
+  - "&e/Storage &f- &7Mở giao diện kho"
+  - "&e/Storage toggle &f- &7Bật/tắt tự động nhặt"
+  - "&e/Storage deposit &b<material;data> &6[số lượng|all] &f- &7Gửi vật phẩm vào kho"
+  - "&e/Storage withdraw &b<material;data> &6[số lượng|all] &f- &7Rút vật phẩm khỏi kho"
+  - "&e/Storage sell &b<material;data> &6[số lượng|all] &f- &7Bán vật phẩm trong kho"
+  - "&e/Storage convert &f- &7Mở giao diện chuyển đổi vật phẩm (cần quyền)"
+  - "&e/Storage craft &f - &7Mở giao diện chế tạo"
+  - "&e/Storage view &a<người chơi> &f- &7Xem kho của người chơi"
+  - "&e/Storage transfer &a<người chơi> &b<material> &f- &7Chuyển vật phẩm cho người chơi"
+  - "&e/Storage transfer multi &a<người chơi> &f- &7Chuyển nhiều vật phẩm cho người chơi"
+  - "&e/Storage transfer log &a<người chơi> &d<trang> &f- &7Xem lịch sử chuyển đồ"
+  - "&e/Storage lang &b[mã|list] &f- &7Đổi ngôn ngữ của bạn"
+view:
+  viewing_storage: "#prefix# &aĐang xem kho của &e#player#"
+  no_data: "#prefix# &cNgười chơi &e#player# &ckhông có dữ liệu kho!"
+transfer:
+  success_send: "#prefix# &aĐã chuyển thành công &6#amount#&r #material# &acho &e#player#"
+  success_receive: "#prefix# &aĐã nhận &6#amount#&r #material# &atừ &e#player#"
+  success_multi_send: "#prefix# &aĐã chuyển thành công &d#success#&f/&e#total# &aloại vật phẩm cho &6#player#"
+  success_multi_receive: "#prefix# &aĐã nhận &d#success#&f/&e#total# &aloại vật phẩm từ &6#player#"
+  success_multi_send_detailed: "#prefix# &aĐã chuyển cho &6#player#&a:&r #materials#"
+  success_multi_receive_detailed: "#prefix# &aĐã nhận từ &6#player#&a:&r #materials#"
+  processing_send: "#prefix# &eĐang chuyển &e#amount#&r #material# &echo &6#player#... &eVui lòng đợi &3#time# &egiây"
+  processing_receive: "#prefix# &eBạn sẽ nhận &e#amount#&r #material# &etừ &6#player# &esau &3#time# &egiây"
+  processing_multi_send: "#prefix# &eĐang chuyển &e#count# &eloại vật phẩm &7(&3#total# &avật phẩm&7) &echo &6#player#&e... Vui lòng đợi &3#time# &egiây"
+  processing_multi_receive: "#prefix# &eBạn sẽ nhận &e#count# loại vật phẩm (#total# vật phẩm) từ #player# sau #time# giây"
+  processing_multi_send_detailed: "#prefix# &eĐang chuyển cho &6#player#:&r #materials#... &eVui lòng đợi &3#time# &egiây"
+  processing_multi_receive_detailed: "#prefix# &eBạn sẽ nhận từ &6#player#:&r #materials# sau &3#time# &egiây"
+  failed_insufficient: "#prefix# &cBạn không có đủ #material#&c! Bạn chỉ có &e#current# &cvật phẩm."
+  failed_in_progress: "#prefix# &cBạn đang có một giao dịch chuyển đồ! Vui lòng đợi hoàn tất."
+  failed_offline: "#prefix# &cNgười chơi &e#player# &ckhông online"
+  failed_offline_during: "#prefix# &cChuyển đồ thất bại: Người chơi &e#player# &cđã thoát trong lúc chuyển"
+  failed_insufficient_during: "#prefix# &cChuyển đồ thất bại: Bạn không còn đủ #material#"
+  failed_receiver_full: "#prefix# &cChuyển đồ thất bại: Người chơi &e#player# &ckhông thể nhận thêm vật phẩm"
+  failed_multi_all: "#prefix# &cTất cả giao dịch đều thất bại! Hãy kiểm tra vật phẩm và thử lại."
+  failed_unknown: "#prefix# &cChuyển đồ thất bại do lỗi không xác định"
+  failed_same_player: "#prefix# &cBạn không thể chuyển cho chính mình"
+  cancelled: "#prefix# &cĐã hủy chuyển đồ"
+  gui_enter_amount: "#prefix# &eHãy nhập số lượng muốn chuyển vào chat:"
+  gui_enter_amount_success: "&aĐã đặt số lượng chuyển là #amount#"
+  failed_no_selection: "&cChưa chọn vật phẩm nào để chuyển!"
+  log_header: "&6=== Lịch sử chuyển đồ của #player# ==="
+  log_header_paginated: "&6=== Lịch sử chuyển đồ của &a#player# &7(&6Trang &a#current_page#&7/&a#total_pages#&7) &6==="
+  log_entry_sent: "&7[#time#] &aĐã gửi &f#amount# #material# &acho #receiver#"
+  log_entry_received: "&7[#time#] &bĐã nhận &f#amount# #material# &btừ #sender#"
+  log_no_history: "&cKhông có lịch sử chuyển đồ của &e#player#"
+  log_footer: "&7Hiển thị &a#count# &7giao dịch gần nhất"
+  log_total_count: "&7Tổng số giao dịch: &e#total#"
+  log_footer_info: "&7Tổng: &e#total# &7| Trang &e#current#&7/&e#total_pages#"
+  log_nav_previous: "◀ Trước"
+  log_nav_hover: "Bấm để sang trang &e#page#"
+  log_nav_previous_disabled: "◀ Trước"
+  log_nav_next: "Sau ▶"
+  log_nav_next_disabled: "Sau ▶"
+  log_nav_spacing: "     "
+  log_nav_separator: "&7─────────────────────────────────────────────"
+  log_nav_info: "&7Trang &e#current#&7/&e#total#"
+  log_nav_help: "&7Dùng &e/storage transfer log [người chơi] [trang]&7 để chuyển trang"
+  log_nav_colors:
+    active: "&a"
+    disabled: "&7"
+    spacing: "&8"
+convert:
+  invalid_material: "#prefix# &cVật phẩm này không thể chuyển đổi!"
+  invalid_conversion: "#prefix# &cLựa chọn chuyển đổi không hợp lệ!"
+  insufficient_materials: "#prefix# &cBạn cần ít nhất &e#required# #material#&c! Bạn chỉ có &e#current#&c."
+  storage_full: "#prefix# &cKho &e#material# &cđã đầy!"
+  success: "#prefix# &aĐã chuyển đổi thành công &e#from_amount# #from_material# &athành &e#to_amount# #to_material#&a!"
+  failed: "#prefix# &cChuyển đổi thất bại! Hãy thử lại."
+  chat_amount: "#prefix# &eHãy nhập số lượng muốn chuyển đổi vào chat:"
+events:
+  status:
+    header: "&6=== &eTrạng thái hệ thống sự kiện &6==="
+    line: "#event#: &f#status#"
+    footer: "&7Dùng &e'/storage event help' &7để xem thêm lệnh"
+    unknown: "Không rõ"
+    active: "Đang diễn ra"
+    active_with_time: "Đang diễn ra (#time#)"
+    scheduled: "Đã lên lịch"
+    enabled: "Bật"
+    disabled: "Tắt"
+  list:
+    header: "&6=== &aSự kiện đang diễn ra &6==="
+    active: "#event# &7(Đang diễn ra)"
+    no_active: "&7Hiện không có sự kiện nào đang diễn ra"
+  invalid_type: "&cLoại sự kiện không hợp lệ! Các loại hợp lệ: &emining_contest, double_drop, community_event"
+  start:
+    success: "&aĐã bắt đầu sự kiện #event#"
+    failed: "&cKhông thể bắt đầu sự kiện&r #event# &c(đang diễn ra hoặc gặp lỗi)"
+  stop:
+    success: "&aĐã dừng sự kiện #event#"
+    success_mining_contest: "&aĐang kết thúc sự kiện #event# &anhẹ nhàng - chốt kết quả và phát thưởng..."
+    failed: "&cKhông thể dừng sự kiện&r #event# &c(không diễn ra hoặc gặp lỗi)"
+    method:
+      graceful: "&eSẽ kết thúc kèm thông báo người thắng và phát thưởng"
+      immediate: "&eSẽ dừng ngay lập tức"
+  help:
+  - "&6=== &eLệnh sự kiện &6==="
+  - "&e/storage event &f- &7Xem trạng thái sự kiện"
+  - "&e/storage event list &f- &7Liệt kê các sự kiện"
+  - "&e/storage event debug &f- &7Xem thông tin lịch trình để gỡ lỗi"
+  - "&e/storage event start &b<loại> &f- &7Bắt đầu một sự kiện"
+  - "&e/storage event stop &b<loại> &f- &7Dừng một sự kiện"
+  - "&7Các loại sự kiện: mining_contest, double_drop, community_event"
+  debug:
+    header: "&6=== &eGỡ lỗi lịch trình sự kiện &6==="
+    footer: "&7Thời gian hiện tại: &f#current_time#"
+    event_info: "#event_name# &7(#event_key#):"
+    timing_type: "&7Loại: &f#type#"
+    schedule_config: "&7Lịch: &f#schedule#"
+    next_run: "&7Lần chạy tiếp theo: &a#next_time#"
+    stored_time: "&7Thời gian đã lưu: &a#stored_time#"
+    stored_time_not_set: "&7Thời gian đã lưu: &cChưa đặt"
+    cannot_calculate: "&7Lần chạy tiếp theo: &cKhông thể tính"
+    error_occurred: "&7Lỗi: &c#error#"
+  common:
+    title:
+      started: "#event# &aĐã bắt đầu!"
+      ended: "#event# &cĐã kết thúc!"
+    subtitle:
+      started: "&7Thời lượng: &e#duration# &7phút"
+      ended: "&7Cảm ơn bạn đã tham gia!"
+    chat:
+      reward_received: "#prefix# &aBạn đã nhận phần thưởng sự kiện!"
+      reminder_start: "#prefix# #event# &6sẽ bắt đầu sau &e#time#!"
+      reminder_end: "#prefix# #event# &6sẽ kết thúc sau &e#time#!"
+      event_started: "#prefix# #event# &7đã bắt đầu! Thời lượng: &a#duration# &7phút"
+      event_ended: "#prefix# #event# &7đã kết thúc! Cảm ơn đã tham gia!"
+      first_participation: "#prefix#  &aChào mừng đến với #event#! &7Hãy đào để tham gia!"
+      statistics: "#prefix# &eThống kê sự kiện: &a#participants# người tham gia &7| Thời lượng: &e#duration#"
+  mining_contest:
+    title:
+      manual_stop: "&6Cuộc thi đào &cđã kết thúc!"
+      winner: "#prefix# &a#player# &fgiành hạng &e#position# &fvới &b#amount# &fblock đã đào!"
+    subtitle:
+      manual_stop: "&3Đang chốt bảng xếp hạng và phát thưởng"
+      winner: "&dChúc mừng thành tích của bạn!"
+    action_bar:
+      progress: "&eTiến độ của bạn: &a#amount# block &7| Hạng: &e#rank# &7| Thời gian: &e#time#"
+    chat:
+      manual_stop_complete: "#prefix# &aCuộc thi đào &7đã kết thúc thành công!"
+      leaderboard: "&e#position#. &6#player# &f- #amount# block"
+      no_winners: "#prefix# &6Cuộc thi đào &fkết thúc mà không có người tham gia!"
+      progress_summary: "#prefix# &6Tiến độ cuộc thi đào: &eTop 3: &a#top3# &7| Thời gian: &e#time#"
+      no_participants_yet: "&7Chưa có người tham gia"
+      event_started: "&7[&6Cuộc thi đào&7] &eHãy thi đào nhiều block nhất! &7Thời lượng: &a#duration# phút"
+      first_mine: "&7[&6Cuộc thi đào&7] &aBạn đã tham gia cuộc thi! &7Hãy đào tiếp để leo bảng xếp hạng!"
+      milestone_reached: "&7[&6Cuộc thi đào&7] &eCột mốc! &aBạn đã đào #amount# block! &7Hạng: &e#rank#"
+      rank_improved: "&7[&6Cuộc thi đào&7] &aLên hạng! &7Bạn đang hạng &e#rank# &7với &a#amount# block!"
+      final_statistics: "&7[&6Cuộc thi đào&7] &eTổng người tham gia: &a#participants# &7| Người thắng: &e#winner# &7(&a#winning_amount# block&7)"
+      leaderboard_header: "&6&l=== &e&lKết quả cuộc thi đào &6&l==="
+      leaderboard_footer: "&6&l================================"
+      leaderboard_separator: "&8&m                                    "
+      leaderboard_entry_winner: "&e#position#. &a&l#player# &7- &e#amount# block &6&l[NGƯỜI THẮNG]"
+      leaderboard_entry_normal: "&e#position#. &a#player# &7- &e#amount# block"
+      event_summary: "&7Tổng người tham gia: &e#participants# &7| Tổng block đã đào: &e#total_blocks# &7| Thời lượng: &e#duration#"
+      no_participants_detailed: "&7&oKhông ai tham gia cuộc thi đào này. Chúc may mắn lần sau!"
+  double_drop:
+    subtitle:
+      started: "&7Hệ số: &e#multiplier#x &7| Thời lượng: &e#duration#m"
+      ended: "&7Cảm ơn bạn đã tham gia Nhân đôi vật phẩm!"
+    action_bar:
+      active: "&6Đang nhân đôi vật phẩm! &e+#bonus# thưởng &7| &eThời gian: #time#"
+    chat:
+      event_started: "&7[&6Nhân đôi vật phẩm&7] &eNhận &a#multiplier#x &7vật phẩm thưởng khi đào! &7Thời lượng: &a#duration# phút"
+      event_ended: "&7[&6Nhân đôi vật phẩm&7] &eSự kiện đã kết thúc! &7Cảm ơn đã tham gia!"
+      first_participation: "&7[&6Nhân đôi vật phẩm&7] &aĐã tham gia! &7Hệ số: &e#multiplier#x &7| Thời gian: &e#time#"
+  community_event:
+    title:
+      completed: "&aĐã đạt mục tiêu cộng đồng!"
+      failed: "&cChưa đạt mục tiêu cộng đồng!"
+    subtitle:
+      completed: "&7Mọi người đều nhận thưởng!"
+      failed: "&7Chúc may mắn lần sau! (#current#/#goal#)"
+    action_bar:
+      progress: "&eCộng đồng: #current#/#goal# (#percentage#%) &7| Người chơi: #participants# &7| Thời gian: #time#"
+    chat:
+      progress_summary: "&6Sự kiện cộng đồng: &e#current#/#goal# block &7(#percentage#%) | &a#participants# người chơi &7| Thời gian: &e#time#"
+      event_started: "&7[&6Sự kiện cộng đồng&7] &eCùng nhau đào &a#goal# block! &7Thời lượng: &a#duration# phút"
+      first_contribution: "&7[&6Sự kiện cộng đồng&7] &aBạn đã tham gia nỗ lực chung! &7Mỗi block đều có giá trị!"
+      milestone_reached: "&7[&6Sự kiện cộng đồng&7] &eCột mốc! &aĐã hoàn thành #percentage#% &7(&e#current#/#goal# block&7)"
+      final_statistics: "&7[&6Sự kiện cộng đồng&7] &eKết quả: &a#current#/#goal# block &7(&e#percentage#%&7) | &a#participants# người đóng góp"
+enchant:
+  invalid_enchant: "#prefix# &cPhù phép '&e#enchant#&c' không hợp lệ! Các phù phép có sẵn: &7tnt, haste, multiplier, veinminer, test_enchant"
+  invalid_level: "#prefix# &cCấp '&e#level#&c' không hợp lệ! Cấp tối đa của phù phép này là &e#max#"
+  no_item_in_hand: "#prefix# &cBạn phải cầm một vật phẩm ở tay chính!"
+  not_applicable_item: "#prefix# &cKhông thể áp dụng phù phép này lên vật phẩm này!"
+  not_enchanted: "#prefix# &cVật phẩm này không có phù phép &e#enchant#&c!"
+  give_success: "#prefix# &aĐã tặng &e#enchant# &7Cấp &e#level# &acho &6#player#"
+  receive_enchant: "#prefix# &aBạn đã nhận phù phép &e#enchant# &7Cấp &e#level#&a!"
+  remove_success: "#prefix# &aĐã xóa &e#enchant# &akhỏi vật phẩm của &6#player#"
+  enchant_removed: "#prefix# &cPhù phép &e#enchant# &ccủa bạn đã bị xóa!"
+  available_enchants_header: "&6=== &eCác phù phép có sẵn &6==="
+  available_enchant_entry: "&e#enchant# &7(&6#name#&7) - Cấp tối đa: &a#max_level#"
+  item_enchants_header: "&6=== &ePhù phép trên vật phẩm của &a#player# &6==="
+  item_enchant_entry: "&e#enchant# &7Cấp &a#level#"
+  no_enchants_on_item: "&7Vật phẩm này không có phù phép tùy chỉnh"
+  info_header: "&6=== &eThông tin phù phép: &a#enchant# &6==="
+  info_description: "&7Mô tả: &f#description#"
+  info_max_level: "&7Cấp tối đa: &e#max_level#"
+  info_applicable_items: "&7Vật phẩm áp dụng được: &f#items#"
+  invalid_max_level: "#prefix# &cCấp tối đa '&e#level#&c' không hợp lệ! Phải từ 1 đến &e#max#"
+  setmaxlevel_success: "#prefix# &aĐã đặt cấp tối đa của &e#enchant# &athành &6#level#&a! Các cấp đã được tạo tự động."
+  setmaxlevel_failed: "#prefix# &cKhông thể cập nhật cấp tối đa của phù phép '&e#enchant#&c'!"
+special_material:
+  found: "#prefix# &eBạn tìm thấy nguyên liệu đặc biệt: #material# &7#source#&e!"
+  cooldown: "#prefix# &c#material# &cchưa sẵn sàng! (&e#time#&c)"
+  daily_limit_reached: "#prefix# &cBạn đã đạt giới hạn hằng ngày của #material#!"
+  sources:
+    block: "&7khi đào block"
+    crop: "&7khi thu hoạch nông sản"
+    mob: "&7khi hạ quái vật"
+  invalid_subcommand: "#prefix# &cLệnh con '&e#subcommand#&c' không hợp lệ! Dùng: list, info, give"
+  no_materials: "#prefix# &cChưa cấu hình nguyên liệu đặc biệt nào!"
+  material_not_found: "#prefix# &cKhông tìm thấy nguyên liệu đặc biệt '&e#material#&c'!"
+  give_success: "#prefix# &aĐã tặng &e#amount# #material# &acho &6#player#"
+  give_received: "#prefix# &aBạn đã nhận &e#amount# #material# &atừ &6#player#"
+  give_failed: "#prefix# &cKhông thể tặng nguyên liệu đặc biệt!"
+  list:
+    header: "&6=== &eNguyên liệu đặc biệt &7(#count#) &6==="
+    entry: "&e• &7#info#"
+  info:
+    header: "&6=== &eNguyên liệu đặc biệt: &a#material# &6==="
+    details: "&7#info#"
+crafting:
+  no_permission: "#prefix# &cBạn không có quyền chế tạo &e#recipe#"
+  craft_in_progress: "#prefix# &cBạn đang có một lần chế tạo chưa xong!"
+  insufficient_materials: "#prefix# &cBạn không đủ nguyên liệu để chế tạo &e#recipe#"
+  craft_failed: "#prefix# &cChế tạo &e#recipe# &cthất bại. Hãy thử lại."
+  inventory_full: "#prefix# &cTúi đồ đã đầy! Không thể chế tạo &e#recipe#"
+  recipe_not_found: "#prefix# &cKhông tìm thấy công thức &e#recipe#&c!"
+  recipe_disabled: "#prefix# &cCông thức &e#recipe# &chiện đang bị tắt!"
+  processing: "#prefix# &eĐang chế tạo &6#amount#x #recipe#&e... Vui lòng đợi &6#time# &egiây"
+  processing_failed: "#prefix# &cChế tạo &e#recipe# &cthất bại. Nguyên liệu có thể đã bị dùng."
+  craft_success: "#prefix# &aĐã chế tạo thành công &6#amount#x #recipe#&a!"
+  craft_cancelled: "#prefix# &cĐã hủy chế tạo!"
+  enter_craft_amount: "#prefix# &eHãy nhập số lượng muốn chế tạo (Tối đa: &6#max#&e):"
+  invalid_craft_amount: "#prefix# &cSố lượng không hợp lệ! Hãy nhập số từ 1 đến 999."
+  editor_specify_recipe: "#prefix# &cHãy chỉ định ID công thức cần sửa!"
+  editor_created: "#prefix# &aĐã tạo công thức mới: &e#recipe#"
+  editor_saved: "#prefix# &aĐã lưu công thức: &e#recipe#"
+  editor_discarded: "#prefix# &7Đã hủy các thay đổi của công thức: &e#recipe#"
+  editor_deleted: "#prefix# &cĐã xóa công thức: &e#recipe#"
+  editor_enabled: "#prefix# &aĐã bật công thức: &e#recipe#"
+  editor_disabled: "#prefix# &cĐã tắt công thức: &e#recipe#"
+  editor_duplicated: "#prefix# &aĐã nhân bản &e#recipe# &athành &e#new_recipe#"
+  editor_duplicate_failed: "#prefix# &cKhông thể nhân bản công thức!"
+  no_recipes: "#prefix# &cKhông có công thức nào!"
+  reloaded: "#prefix# &aĐã tải lại hệ thống chế tạo!"
+  import_empty_hand: "#prefix# &cBạn phải cầm một vật phẩm trên tay để nhập!"
+  import_success: "#prefix# &aĐã nhập vật phẩm thành công thành công thức: &e#recipe#"
+  import_failed: "#prefix# &cKhông thể nhập vật phẩm! Hãy thử lại."
+  edit_material_prompt: "&eNhập tên vật phẩm vào chat (hoặc gõ 'cancel' để hủy):"
+  edit_material_current: "&7Hiện tại: #current#"
+  edit_material_hint: "&7Ví dụ: DIAMOND_SWORD, STONE, IRON_INGOT &7(&eDanh sách vật phẩm: &a&nhttps://mcutils.com/item-ids&7)"
+  edit_material_empty: "&cTên vật phẩm không được để trống!"
+  edit_material_invalid: "&cVật phẩm không hợp lệ: &e#material#"
+  edit_material_success: "&aĐã cập nhật vật phẩm thành: &e#material#"
+  edit_name_prompt: "&eNhập tên công thức mới vào chat (hoặc gõ 'cancel' để hủy):"
+  edit_name_current: "&7Hiện tại: #current#"
+  edit_amount_prompt: "&eNhập số lượng thành phẩm (1-64) (hoặc gõ 'cancel' để hủy):"
+  edit_amount_current: "&7Hiện tại: #current#"
+  edit_lore_prompt: "&eNhập lệnh lore (hoặc gõ 'cancel' để hủy):"
+  edit_lore_hint: "&7Lệnh: &aadd <chữ>&7, &eedit <dòng> <chữ>&7, &cremove [dòng]&7, &cclear all"
+  edit_lore_current_header: "&6Lore hiện tại:"
+  edit_lore_list: "&7#index#. &f#text#"
+  edit_lore_list_empty: "&7Chưa có dòng lore nào!"
+  edit_lore_add_success: "&aĐã thêm dòng lore!"
+  edit_lore_edit_success: "&aĐã sửa dòng &e#line#!"
+  edit_lore_edit_invalid: "&cSai định dạng! Dùng: &eedit <dòng> <chữ>"
+  edit_lore_remove_success: "&aĐã xóa dòng &e#line#!"
+  edit_lore_remove_last_success: "&aĐã xóa dòng lore cuối cùng!"
+  edit_lore_remove_empty: "&cKhông có dòng lore nào để xóa!"
+  edit_lore_clear_success: "&aĐã xóa toàn bộ lore!"
+  edit_lore_invalid_line: "&cSố dòng không hợp lệ!"
+  edit_lore_empty: "&cNội dung lore không được để trống!"
+  edit_requirement_prompt: "&eNhập tên vật phẩm yêu cầu (hoặc gõ 'cancel' để hủy):"
+  edit_requirement_hint: "&7Ví dụ: DIAMOND, IRON_INGOT"
+  edit_requirement_amount_prompt: "&eNhập số lượng mới cho #material# (hoặc gõ 'cancel' để hủy):"
+  edit_permission_prompt: "&eNhập permission (gõ 'none' để bỏ yêu cầu quyền, hoặc 'cancel' để hủy):"
+  edit_permission_current: "&7Hiện tại: #current#"
+  edit_permission_hint: "&7Ví dụ: storage.craft.enhanced | Gõ 'none' để bỏ yêu cầu quyền"
+  edit_category_prompt: "&eNhập lệnh danh mục (gõ 'cancel' để hủy):"
+  edit_category_hint: "&7Lệnh: &aset <danh mục>&7, &eauto&7, &blist&7, &dsuggest &7| Hoặc gõ thẳng tên danh mục"
+  edit_category_current: "&7Hiện tại: &e#current# &7(#display#)"
+  edit_category_available: "&7Có sẵn: #categories#"
+  edit_category_suggested: "&7Gợi ý cho &e#material#&7: &a#suggested#"
+  edit_category_set_success: "&aĐã đặt danh mục: &e#category# &7(#display#)"
+  edit_category_set_invalid: "&cHãy chỉ định danh mục! Dùng: &eset <danh mục>"
+  edit_category_auto_success: "&aĐã tự phân loại vào: &e#category# &7(#display#) &adựa trên &e#material#"
+  edit_category_all_reserved: "&cDanh mục 'all' được dành cho bộ lọc! Hãy chọn tên khác."
+  edit_category_invalid: "&cDanh mục '&e#category#&c' không hợp lệ! Dùng &elist &cđể xem các danh mục."
+  edit_category_list_header: "&6=== Các danh mục có sẵn ==="
+  edit_category_list_entry: "&7• &e#key# &7- #name# &8- #desc##current#"
+  edit_category_suggest_header: "&6Danh mục gợi ý cho &e#material#&6:"
+  edit_enchant_prompt: "&eNhập lệnh phù phép (hoặc gõ 'cancel' để hủy) &7(&eDanh sách phù phép: &a&nhttps://hub.spigotmc.org/javadocs/bukkit/org/bukkit/enchantments/Enchantment.html&7)&a:"
+  edit_enchant_hint: "&7Lệnh: &aadd <phù phép> <cấp>&7, &cremove [dòng]&7, &eclear all"
+  edit_enchant_list: "&7#index#. &e#enchant# &7Cấp &a#level#"
+  edit_enchant_empty: "&cChưa thêm phù phép nào!"
+  edit_enchant_add_success: "&aĐã thêm: &e#enchant# &7Cấp &a#level#"
+  edit_enchant_add_invalid: "&cPhù phép hoặc cấp không hợp lệ! Định dạng: &aadd <phù phép> <cấp>"
+  edit_enchant_remove_success: "&aĐã xóa phù phép ở dòng &e#line#"
+  edit_enchant_remove_invalid: "&cSố dòng không hợp lệ!"
+  edit_enchant_clear_success: "&aĐã xóa toàn bộ phù phép"
+  edit_flag_prompt: "&eNhập lệnh flag (hoặc gõ 'cancel' để hủy) &7(&eDanh sách flag: &a&nhttps://hub.spigotmc.org/javadocs/bukkit/org/bukkit/inventory/ItemFlag.html&7)&a:"
+  edit_flag_hint: "&7Lệnh: &aadd <flag>&7, &cremove [flag|dòng]&7, &eclear all"
+  edit_flag_available: "&7Các flag có sẵn: &e#flags#"
+  edit_flag_list: "&7#index#. &e#flag#"
+  edit_flag_empty: "&7Chưa áp dụng flag nào!"
+  edit_flag_current_header: "&6Các flag hiện tại:"
+  edit_flag_add_success: "&aĐã thêm flag: &e#flag#"
+  edit_flag_add_duplicate: "&cFlag &e#flag# &cđã được áp dụng!"
+  edit_flag_remove_success: "&aĐã xóa flag: &e#flag#"
+  edit_flag_remove_last_success: "&aĐã xóa flag cuối cùng: &e#flag#"
+  edit_flag_remove_invalid_line: "&cSố dòng không hợp lệ!"
+  edit_flag_remove_not_found: "&cKhông tìm thấy flag &e#flag#&c!"
+  edit_flag_remove_empty: "&cKhông có flag nào để xóa!"
+  edit_flag_clear_success: "&aĐã xóa toàn bộ flag"
+  edit_flag_invalid: "&cFlag không hợp lệ: &e#flag#"
+  edit_flag_version_incompatible: "&cFlag &e#flag# &ckhông có trên phiên bản máy chủ của bạn!"
+  edit_cmd_prompt: "&eNhập custom model data (số) (hoặc gõ 'cancel' để hủy):"
+  edit_cmd_current: "&7Hiện tại: #current#"
+  edit_recipe_not_found: "&cKhông tìm thấy công thức!"
+  edit_name_success: "&aĐã cập nhật tên công thức!"
+  edit_amount_success: "&aĐã cập nhật số lượng thành phẩm!"
+  edit_amount_invalid: "&cSố lượng phải từ 1 đến 64!"
+  edit_lore_success: "&aĐã thêm dòng lore!"
+  edit_requirement_success: "&aĐã thêm yêu cầu: #material# x#amount#"
+  edit_requirement_amount_success: "&aĐã cập nhật số lượng yêu cầu!"
+  edit_requirement_amount_invalid: "&cSố lượng phải ít nhất là 1!"
+  edit_permission_success: "&aĐã đặt permission: #permission#"
+  edit_category_success: "&aĐã cập nhật danh mục!"
+  edit_enchant_invalid: "&cTên phù phép không hợp lệ!"
+  edit_enchant_level_invalid: "&cCấp phải từ 1 đến #max#!"
+  edit_cmd_success: "&aĐã cập nhật custom model data!"
+  edit_cmd_invalid: "&cSố không hợp lệ!"
+  requirement_added_gui: "&aĐã thêm yêu cầu: #material# x#amount#"
+  requirement_removed: "&aĐã xóa yêu cầu: #material#"
+  requirement_removed_gui: "&aĐã xóa yêu cầu: #material#"
+  material_amount_increased: "&aĐã tăng số lượng #material# lên #amount#"
+  material_amount_decreased: "&aĐã giảm số lượng #material# xuống #amount#"
+  material_amount_min: "&cSố lượng nguyên liệu phải ít nhất là 1!"
+  material_removed: "&aĐã xóa nguyên liệu: #material#"
+  materials_cleared: "&aĐã xóa toàn bộ yêu cầu nguyên liệu"
+  lore_removed: "&aĐã xóa dòng lore cuối cùng"
+  lore_no_lines: "&cKhông có dòng lore nào để xóa!"
+  edit_name_empty: "&cTên công thức không được để trống!"
+  edit_category_empty: "&cDanh mục không được để trống!"
+  unbreakable_toggled: "&aĐã chuyển trạng thái không thể phá hủy: #status#"
+  flag_toggled: "&aĐã chuyển #flag#: #status#"
+  delete_confirm: "Xóa công thức: &e#recipe#&7?"
+  no_requirements: "&7Không có yêu cầu"
+  permission_added: "&aĐã đặt yêu cầu quyền: #permission#"
+  permission_removed: "&cĐã bỏ yêu cầu quyền: #permission#"
+  permission_cleared: "&aĐã xóa yêu cầu quyền"
+  config_error: "&cLỗi cấu hình"
+  config_error_detail: "&7Không thể tải: #path#"
+  status_enabled: "&aĐang bật"
+  status_disabled: "&cĐang tắt"
+  status_on: "BẬT"
+  status_off: "TẮT"
+  status_enabled_lower: "đang bật"
+  status_disabled_lower: "đang tắt"
+friends:
+  request_sent: "#prefix# &aĐã gửi lời mời kết bạn tới &e#player#&a!"
+  request_received: "#prefix# &e#player# &ađã gửi lời mời kết bạn! Dùng &e/storage friends accept #player# &ađể chấp nhận."
+  request_accepted: "#prefix# &aBạn và &e#player# &ađã trở thành bạn bè!"
+  request_accepted_notify: "#prefix# &e#player# &ađã chấp nhận lời mời kết bạn của bạn!"
+  request_denied: "#prefix# &cBạn đã từ chối lời mời kết bạn của &e#player#&c."
+  request_denied_notify: "#prefix# &e#player# &cđã từ chối lời mời kết bạn của bạn."
+  request_expired: "#prefix# &cLời mời kết bạn từ &e#player# &cđã hết hạn."
+  icon:
+    "yes": "&a✔"
+    "no": "&c✘"
+  already_friends: "#prefix# &cBạn và &e#player# &cđã là bạn bè!"
+  not_friends: "#prefix# &cBạn và &e#player# &cchưa là bạn bè!"
+  no_pending_request: "#prefix# &cKhông có lời mời kết bạn nào từ &e#player#&c."
+  friend_removed: "#prefix# &cBạn đã xóa &e#player# &ckhỏi danh sách bạn bè."
+  friend_removed_notify: "#prefix# &e#player# &cđã xóa bạn khỏi danh sách bạn bè của họ."
+  cannot_add_self: "#prefix# &cBạn không thể kết bạn với chính mình!"
+  max_friends_reached: "#prefix# &cBạn đã đạt số bạn bè tối đa &8(#current#/#max#)&c!"
+  target_max_friends: "#prefix# &e#player# &cđã đạt số bạn bè tối đa!"
+  already_sent_request: "#prefix# &cBạn đã gửi lời mời kết bạn tới &e#player# &crồi!"
+  shared_access_denied: "#prefix# &cBạn không có quyền truy cập kho chung với &e#player#&c!"
+  shared_storage_opened: "#prefix# &aĐã mở &e#type# &acủa &e#player#&a."
+  offline_access_denied: "#prefix# &c#player# &cđang offline và truy cập khi offline đã bị tắt."
+  player_not_found: "#prefix# &cKhông tìm thấy người chơi &e#player#&c!"
+  system_disabled: "#prefix# &cHệ thống Kho bạn bè đã bị tắt."
+  invalid_storage_type: "#prefix# &cLoại kho '&e#type#&c' không hợp lệ! Có sẵn: storage"
+  storage_access_denied: "#prefix# &c#player# &cchưa cho phép bạn bè truy cập &e#type# &ccủa họ."
+  list_header: "&6=== &eDanh sách bạn bè &8(&a#count#&7/&a#max#&8) &6==="
+  list_entry: "&7- &a#player#"
+  list_empty: "&7Bạn chưa có bạn bè nào. Dùng &e/storage friends add <người chơi> &7để thêm!"
+  pending_header: "&6=== &eLời mời kết bạn đang chờ &6==="
+  pending_entry: "&7- &e#player# &8(hết hạn sau #time#)"
+  pending_empty: "&7Không có lời mời kết bạn nào đang chờ."
+  pending_on_join: "#prefix# &eBạn có &a#count# &elời mời kết bạn đang chờ! Dùng &a/storage friends list &eđể xem."
+  settings_header: "&6=== &eCài đặt quyền truy cập kho của bạn &6==="
+  settings_entry: "&7- &e#type#&7: #status#"
+  settings_updated: "#prefix# &aĐã cập nhật quyền truy cập &e#type#"
+  settings_all_updated: "#prefix# &aĐã cập nhật mọi cài đặt quyền truy cập kho"
+  invalid_setting_value: "#prefix# &cGiá trị '&e#value#&c' không hợp lệ! Dùng 'allow' hoặc 'deny'."
+  settings_help:
+  - "&6=== &eLệnh cài đặt kho bạn bè &6==="
+  - "&e/storage friends settings &f- &7Xem cài đặt hiện tại"
+  - "&e/storage friends settings <loại_kho> <allow|deny> [deposit|withdraw|access|all] &f- &7Bật/tắt quyền truy cập"
+  history_header: "&6=== &eHoạt động trên kho của bạn (Trang #page#/#total#) &6==="
+  history_header_mine: "&6=== &eHoạt động của bạn trên kho bạn bè (Trang #page#/#total#) &6==="
+  history_entry: "&7[#time#] &e#player# &a#action# &f#detail#"
+  history_entry_mine: "&7[#time#] &aBạn &6#action# &ftrong kho của &e#player#&f — &f#detail#"
+  history_empty: "&7Không có lịch sử."
+  history_hint_mine: "&7Mẹo: Dùng &e/storage friends history mine &7để xem các hoạt động bạn đã làm."
+  history_hint_incoming: "&7Mẹo: Dùng &e/storage friends history &7để xem hoạt động của người khác trên kho của bạn."
+  invalid_permission_type: "#prefix# &cLoại quyền '&e#type#&c' không hợp lệ! Các loại hợp lệ: deposit, withdraw, access, all"
+  settings_entry_detailed: "&7- &e#type# &f| &7Truy cập: #access# &f| &7Gửi: #deposit# &f| &7Rút: #withdraw#"
+  owner_not_enough: "#prefix# &c#player# &ckhông có đủ vật phẩm!"
+  inventory_full: "#prefix# &cTúi đồ của bạn đã đầy!"
+  withdraw_success: "#prefix# &aĐã rút &e#amount# #material# &atừ kho của &e#player#&a."
+  not_enough_items: "#prefix# &cBạn không có đủ vật phẩm!"
+  owner_storage_full: "#prefix# &cKho của #player# đã đầy!"
+  deposit_success: "#prefix# &aĐã gửi &e#amount# #material# &avào kho của &e#player#&a. &7(từ túi đồ)"
+  deposit_from_storage_success: "#prefix# &aĐã chuyển &e#amount# #material# &atừ kho của bạn → kho của &e#player#&a."
+  deposit_nothing: "#prefix# &cBạn không có &e#material# &ctrong &e#source# &cđể gửi!"
+  not_enough_in_storage: "#prefix# &cBạn chỉ có &e#available# #material# &ctrong kho!"
+  withdraw_not_allowed: "#prefix# &cBạn không có quyền rút từ #type# của #player#!"
+  deposit_not_allowed: "#prefix# &cBạn không có quyền gửi vào #type# của #player#!"
+  history_nav_next: "&a[Sau →]"
+  history_nav_prev: "&a[← Trước]"
+  history_error: "&cKhông thể lấy lịch sử."
+  notification:
+    deposit: "#prefix# &e#player# &ađã gửi &e#amount# #material# &avào &e#type# &acủa bạn."
+    withdraw: "#prefix# &e#player# &ađã rút &e#amount# #material# &atừ &e#type# &acủa bạn."
+    settings_changed: "#prefix# &aQuyền truy cập &e#type# &acủa bạn đã được #status# &acho bạn bè."
+  help:
+  - "&6=== &eLệnh kho bạn bè &6==="
+  - "&e/storage friends add <người chơi> &f- &7Gửi lời mời kết bạn"
+  - "&e/storage friends accept <người chơi> &f- &7Chấp nhận lời mời kết bạn"
+  - "&e/storage friends deny <người chơi> &f- &7Từ chối lời mời kết bạn"
+  - "&e/storage friends remove <người chơi> &f- &7Xóa một người bạn"
+  - "&e/storage friends list &f- &7Xem danh sách bạn bè"
+  - "&e/storage friends deposit <người chơi> <storage> <vật phẩm> [số lượng|all] &f- &7Gửi từ kho CỦA BẠN → kho của bạn bè"
+  - "&e/storage friends deposit <người chơi> <storage> <vật phẩm> [số lượng|all] hand &f- &7Gửi vật phẩm đang cầm trong túi đồ → kho của bạn bè"
+  - "&e/storage friends withdraw <người chơi> <storage> <vật phẩm> [số lượng] &f- &7Rút vật phẩm từ kho của bạn bè"
+  - "&e/storage friends history [trang] &f- &7Xem hoạt động của người khác trên kho của bạn"
+  - "&e/storage friends history mine [trang] &f- &7Xem hoạt động của bạn trên kho bạn bè"
+  - "&e/storage friends settings <loại> <allow|deny> [deposit|withdraw|access|all] &f- &7Quản lý quyền truy cập của bạn bè"
+action:
+  deposit:
+    chat_number: "#prefix# &aBạn muốn gửi bao nhiêu vật phẩm? &7(Gõ 'cancel' để thoát)"
+    not_enough_items: "#prefix# &cBạn không có đủ vật phẩm!"
+    owner_storage_full: "#prefix# &cKho của #player# đã đầy!"
+    success: "#prefix# &aĐã gửi &e#amount# #material# &avào kho của &e#player#&a."
+  withdraw:
+    chat_number: "#prefix# &aBạn muốn rút bao nhiêu vật phẩm? &7(Gõ 'cancel' để thoát)"
+    owner_not_enough: "#prefix# &c#player# &ckhông có đủ vật phẩm!"
+    inventory_full: "#prefix# &cTúi đồ của bạn đã đầy!"
+    success: "#prefix# &aĐã rút &e#amount# #material# &atừ kho của &e#player#&a."
+storage_tools:
+  crafter:
+    no_permission: "#prefix# &cChế tạo khối là tính năng Donate! Hãy Donate để chế tạo vật phẩm thành khối."
+    nothing: "#prefix# &cBạn không đủ vật phẩm trong kho để chế tạo khối nào."
+    crafted_one: "#prefix# &aĐã chế tạo &e1 &akhối từ kho của bạn."
+    crafted_all: "#prefix# &aĐã chế tạo &e#amount# &akhối từ kho của bạn."
+    disabled: "#prefix# &cTính năng chế tạo khối đã bị tắt trên máy chủ này."
+  upgrade:
+    success: "#prefix# &aNâng cấp kho thành công lên cấp &e#level#&a! Dung lượng mới: &e#capacity# &avật phẩm."
+    max_level: "#prefix# &cKho của bạn đã đạt cấp tối đa."
+    no_permission: "#prefix# &cBạn không có quyền cho cấp nâng cấp tiếp theo."
+    no_money: "#prefix# &cBạn không đủ tiền để nâng cấp (&e#cost#&c)."
+    no_economy: "#prefix# &cKhông có plugin kinh tế nên không thể mua nâng cấp này."
+    not_owner: "#prefix# &cChỉ chủ đảo mới nâng cấp được kho chung."
+    disabled: "#prefix# &cNâng cấp kho đã bị tắt trên máy chủ này."
+  filter:
+    added: "#prefix# &aĐã thêm &e#item# &avào bộ lọc thu nhặt."
+    removed: "#prefix# &eĐã xóa &f#item# &ekhỏi bộ lọc thu nhặt."
+    cleared: "#prefix# &aĐã xóa bộ lọc thu nhặt: mọi vật phẩm trong kho lại được thu nhặt."
+  sort:
+    changed: "#prefix# &aĐã đổi kiểu sắp xếp thành &e#mode#&a."
+language:
+  current: "#prefix# &7Ngôn ngữ của bạn: &e#language#"
+  changed: "#prefix# &aĐã đổi ngôn ngữ sang &e#language#&a."
+  invalid: "#prefix# &cKhông có ngôn ngữ &e#language#&c. Dùng &e/storage lang list&c."
+  list_header: "#prefix# &7Các ngôn ngữ có sẵn:"
+  list_entry: "&8 - &e#language#"
+  reloaded: "#prefix# &aĐã tải lại các file ngôn ngữ."
+  per_player_disabled: "#prefix# &cMáy chủ này không cho người chơi tự chọn ngôn ngữ."
+common:
+  nav_previous_prefix: "&7Trước: &e"
+  nav_next_prefix: "&7Sau: &e"
+gui:
+  confirmation:
+    title: "&0Xác nhận thao tác"
+    items:
+      message:
+        name: "&e&lCần xác nhận"
+        lore:
+        - "&7Bạn có chắc chắn không?"
+        - "&7"
+        - "&cThao tác này không thể hoàn tác!"
+      confirm:
+        name: "&a&lXÁC NHẬN"
+        lore:
+        - "&7Bấm để xác nhận thao tác này"
+        - "&7"
+        - "&a✓ Tiến hành thao tác"
+      cancel:
+        name: "&c&lHỦY"
+        lore:
+        - "&7Bấm để hủy thao tác này"
+        - "&7"
+        - "&c✗ Quay lại an toàn"
+  convert-ore:
+    title: "&0Chuyển đổi vật phẩm | #player#"
+    items:
+      material_item:
+        lore:
+        - "&7 "
+        - "&fBạn có: &a#amount# #material#"
+        - "&7 "
+        - "&eBấm để xem các lựa chọn chuyển đổi"
+      previous_page:
+        name: "&c◀ Trang trước"
+        lore:
+        - "&7Bấm để sang trang trước"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      next_page:
+        name: "&a▶ Trang sau"
+        lore:
+        - "&7Bấm để sang trang sau"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      back:
+        name: "&aQuay lại kho"
+        lore:
+        - "&eBấm để quay lại kho"
+    option_items:
+      material_display:
+        name: "&e#material#"
+        lore:
+        - "&7 "
+        - "&fBạn có: &a#amount#&f/&e#max_storage#"
+        - "&7 "
+      convert_option:
+        name: "&aChuyển thành #to_material#"
+        lore:
+        - "&7 "
+        - "&fChuyển đổi: &e#from_amount# #from_material# &f→ &a#to_amount# #to_material#"
+        - "&fSố lần tối đa: &b#max_conversions#"
+        - "&fKết quả: &a#result_amount# #to_material#"
+        - "&7 "
+        - "&eClick trái để chuyển tất cả có thể"
+        - "&bClick phải để nhập số lượng tùy chọn"
+      back:
+        name: "&aQuay lại"
+        lore:
+        - "&eBấm để quay lại"
+  items:
+    title: "&0Vật phẩm #material# | #player#"
+    items:
+      deposit:
+        name: "&aGửi vật phẩm"
+        lore:
+        - "&7 "
+        - "&fSố lượng: &a#item_amount#"
+        - "&7 "
+        - "&eClick trái - Gửi vật phẩm với số lượng tùy chọn"
+        - "&eClick phải - Gửi toàn bộ vật phẩm trong túi đồ"
+      withdraw:
+        name: "&aRút vật phẩm"
+        lore:
+        - "&7 "
+        - "&fSố lượng: &a#item_amount#"
+        - "&7 "
+        - "&eClick trái - Rút vật phẩm với số lượng tùy chọn"
+        - "&eClick phải - Rút toàn bộ vật phẩm vào túi đồ"
+      sell:
+        name: "&aBán vật phẩm"
+        lore:
+        - "&7 "
+        - "&fSố lượng: &a#item_amount#"
+        - "&aTự động bán: #autosell#"
+        - "&7 "
+        - "&eClick trái - Bán vật phẩm với số lượng tùy chọn"
+        - "&eClick phải - Bán toàn bộ vật phẩm trong kho"
+        - "&eQ - Bật/tắt tự động bán (cần quyền)"
+      back:
+        name: "&aQuay lại"
+        lore:
+        - "&eBấm để quay lại kho"
+  material-editor:
+    title: "&0Chỉnh nguyên liệu | &e#recipe_name#"
+    items:
+      title:
+        name: "&6&lNguyên liệu yêu cầu"
+        lore:
+        - "&7Nguyên liệu cần để chế tạo công thức này"
+        - "&7"
+        - "&7Nguyên liệu: &e#material_count# &7/ &e#max_materials#"
+        - "&7"
+        - "&aBấm vào nguyên liệu bên dưới để chỉnh sửa"
+      add_material:
+        name: "&a&lThêm nguyên liệu"
+        lore:
+        - "&7Bấm để thêm một"
+        - "&7nguyên liệu yêu cầu mới"
+        - "&7"
+        - "&eMở giao diện chọn nguyên liệu"
+      material_full:
+        name: "&c&lĐã đạt giới hạn nguyên liệu"
+        lore:
+        - "&7Bạn đã đạt tối đa"
+        - "&7&e10 &7nguyên liệu cho mỗi công thức"
+        - "&7"
+        - "&cHãy xóa bớt nguyên liệu trước"
+      material_slot:
+        name: "&e#material#"
+        lore:
+        - "&7Số lượng: &a#amount#"
+        - "&7"
+        - "&eClick trái: &a+1"
+        - "&eClick phải: &c-1"
+        - "&eShift + trái: &6Số lượng tùy chọn"
+        - "&cShift + phải: &4Xóa nguyên liệu"
+      back:
+        name: "&eQuay lại trình chỉnh sửa"
+        lore:
+        - "&7Trở về trình chỉnh sửa công thức"
+      clear_all:
+        name: "&c&lXóa toàn bộ nguyên liệu"
+        lore:
+        - "&7Xóa mọi nguyên liệu yêu cầu"
+        - "&7"
+        - "&c&lCẢNH BÁO: Không thể hoàn tác!"
+  material-selection:
+    title: "&0#category_name# | #player#"
+    selection_titles:
+      default: "Vật phẩm có sẵn"
+      result: "Vật phẩm có sẵn"
+      requirement: "Vật phẩm trong kho"
+    items:
+      border:
+        name: "&7 "
+        lore:
+        - "&7 "
+      category_info:
+        name: "&6#category_name#"
+        lore:
+        - "&7Danh mục #category_number# trên #total_categories#"
+        - "&7"
+        - "&eBấm để đổi danh mục"
+      previous_category:
+        name: "&eDanh mục trước"
+        lore:
+        - "&7Hiện tại: &e#category_name#"
+        - "&7"
+        - "&eBấm để sang danh mục trước"
+      next_category:
+        name: "&eDanh mục sau"
+        lore:
+        - "&7Hiện tại: &e#category_name#"
+        - "&7"
+        - "&eBấm để sang danh mục sau"
+      material_item:
+        name: "&e#material_name#"
+        lore:
+        - "&7Bấm để chọn vật phẩm này"
+        - "#selection_type_lore#"
+      search:
+        name: "&6Tìm vật phẩm"
+        lore:
+        - "&7Bấm để tìm một"
+        - "&7vật phẩm theo tên"
+        - "&7"
+        - "&eNhập tên vật phẩm vào chat"
+      previous_page:
+        name: "&c◀ Trang trước"
+        lore:
+        - "&7Bấm để sang trang trước"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      next_page:
+        name: "&a▶ Trang sau"
+        lore:
+        - "&7Bấm để sang trang sau"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      back:
+        name: "&cQuay lại"
+        lore:
+        - "&7Trở về trình chỉnh sửa công thức"
+  recipe-editor-list:
+    title: "&0Trình chỉnh công thức | &0#player#"
+    items:
+      create_recipe:
+        name: "&a&lTạo công thức mới"
+        lore:
+        - "&7Bấm để tạo một công thức mới"
+        - "&7"
+        - "&eBạn cũng có thể dùng /storage crafteditor import"
+        - "&eđể thêm vật phẩm đang cầm trên tay"
+        - "&7"
+        - "&6Lưu ý: &7Sau khi tạo công thức mới, hãy nhớ"
+        - "&7thêm nguyên liệu yêu cầu trước khi lưu."
+      recipe_item:
+        name: "#recipe_name#"
+        lore:
+        - "&7ID: &e#recipe_id#"
+        - "&7Danh mục: &e#category#"
+        - "&7Trạng thái: #status#"
+        - "&7"
+        - "&7Yêu cầu: &e#requirement_count#"
+        - "&7Thành phẩm: &a#result_amount#x #result_name#"
+        - "&7"
+        - "&eClick trái:&f chỉnh sửa"
+        - "&cClick phải:&f nhân bản"
+        - "&6Shift + trái:&f bật/tắt &acông thức&f/&ctắt"
+        - "&bShift + phải:&f xóa"
+      previous_page:
+        name: "&a◀ Trang trước"
+        lore:
+        - "&7Trang #current_page# / #total_pages#"
+        - "&eBấm để sang trang trước"
+      next_page:
+        name: "&a▶ Trang sau"
+        lore:
+        - "&7Trang #current_page# / #total_pages#"
+        - "&eBấm để sang trang sau"
+      close:
+        name: "&cĐóng"
+        lore: []
+      no_recipes:
+        name: "&eKhông có công thức nào"
+        lore:
+        - "&7Chưa có công thức nào được tạo"
+        - "&7"
+        - "&eBấm vào viên ngọc lục bảo phía trên để tạo"
+  recipe-editor:
+    title: "&8&lChỉnh công thức &7| &b#recipe_name#"
+    items:
+      result_preview:
+        name: "&e&lXem trước thành phẩm"
+        lore:
+        - "&7Đây là hình dạng vật phẩm"
+        - "&7khi người chơi chế tạo ra"
+      edit_material:
+        name: "&6Sửa vật phẩm"
+        lore:
+        - "&7Hiện tại: &e#current_material#"
+        - "&7"
+        - "&eBấm để đổi vật phẩm"
+      edit_name:
+        name: "&6Sửa tên"
+        lore:
+        - "&7Hiện tại: #current_name#"
+        - "&7"
+        - "&eBấm để đổi tên"
+      edit_lore:
+        name: "&6Sửa lore"
+        lore:
+        - "&7Số dòng: &e#lore_count#"
+        - "&7"
+        - "&eClick trái để thêm dòng"
+        - "&cClick phải để xóa dòng cuối"
+      edit_amount:
+        name: "&6Sửa số lượng"
+        lore:
+        - "&7Hiện tại: &e#current_amount#"
+        - "&7"
+        - "&eClick trái: +1"
+        - "&eClick phải: -1"
+        - "&eShift + click: Số lượng tùy chọn"
+      edit_enchantments:
+        name: "&6Sửa phù phép"
+        lore:
+        - "&7Số lượng: &e#enchant_count#"
+        - "&7"
+        - "&eBấm để thêm phù phép"
+      edit_flags:
+        name: "&6Sửa flag vật phẩm"
+        lore:
+        - "&7Flag: &e#flag_count#"
+        - "&7"
+        - "&eBấm để chỉnh flag vật phẩm"
+      edit_custom_model_data:
+        name: "&6Custom Model Data"
+        lore:
+        - "&7Hiện tại: &e#current_cmd#"
+        - "&7"
+        - "&eBấm để đặt custom model data"
+        - "&7Dùng cho resource pack"
+      toggle_unbreakable:
+        name: "&6Bật/tắt không thể phá hủy"
+        lore:
+        - "&7Trạng thái: #status#"
+        - "&7"
+        - "&eBấm để bật/tắt"
+      permission_requirements:
+        name: "&d&lYêu cầu quyền"
+        lore:
+        - "&7Permission: &e#permission#"
+        - "&7"
+        - "&eBấm để quản lý quyền"
+      add_material:
+        name: "&6Thêm nguyên liệu"
+        lore:
+        - "&7Bấm để mở"
+        - "&7trình chỉnh nguyên liệu"
+        - "&7"
+        - "&eQuản lý nguyên liệu yêu cầu"
+      requirement_slot:
+        name: "&e#material#"
+        lore:
+        - "&7Số lượng: &a#amount#"
+        - "&7"
+        - "&eClick trái: +1"
+        - "&eClick phải: -1"
+        - "&eShift + trái: Số lượng tùy chọn"
+        - "&cShift + phải: Xóa"
+      recipe_settings:
+        name: "&b&lCài đặt công thức"
+        lore:
+        - "&7Danh mục: &e#category#"
+        - "&7Trạng thái: #status#"
+        - "&7"
+        - "&eBấm để chỉnh cài đặt"
+      back:
+        name: "&eQuay lại danh sách"
+        lore:
+        - "&7Trở về danh sách công thức"
+      save:
+        name: "&a&lLưu & Thoát"
+        lore:
+        - "&7Lưu thay đổi và quay lại"
+        - "&7danh sách công thức"
+      delete:
+        name: "&c&lXóa công thức"
+        lore:
+        - "&7Xóa vĩnh viễn"
+        - "&7công thức này"
+        - "&7"
+        - "&c&lCẢNH BÁO: Không thể hoàn tác!"
+  recipe-list:
+    title: "&0Chế tạo | #player#"
+    items:
+      recipe_item:
+        lore:
+        - "&7 "
+        - "&7Danh mục: &f#category#"
+        - "&7Thành phẩm: &f#result_amount#x #result_name#"
+        - "&7 "
+        - "&eYêu cầu:"
+        - "#requirements#"
+        - "&7 "
+        - "&aClick trái: &fChế tạo tất cả"
+        - "&aClick phải: &fChế tạo 1"
+        - "&aShift + trái: &fSố lượng tùy chọn"
+      no_recipes:
+        name: "&cKhông có công thức nào"
+        lore:
+        - "&7 "
+        - "&7Hiện không có công thức"
+        - "&7nào dành cho bạn."
+        - "&7 "
+      category_filter:
+        name: "&e&lBộ lọc danh mục"
+        lore:
+        - "&7Hiện tại: &f#current_category#"
+        - "&7 "
+        - "&aBấm để đổi danh mục"
+      previous_page:
+        name: "&c◀ Trang trước"
+        lore:
+        - "&7Bấm để sang trang trước"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      next_page:
+        name: "&a▶ Trang sau"
+        lore:
+        - "&7Bấm để sang trang sau"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      close:
+        name: "&c&lĐóng"
+        lore:
+        - "&7 "
+        - "&7Bấm để đóng"
+        - "&7 "
+  storage-tools:
+    sort:
+      title: "&0Sắp xếp vật phẩm"
+      status_selected: "&a✔ Đã chọn"
+      status_unselected: "&7Bấm để chọn"
+      modes:
+        TYPE:
+          name: "&eTheo loại vật phẩm"
+          lore:
+          - "&7Gom vật phẩm theo chất liệu."
+          - ""
+          - "#status#"
+        NAME_ASC:
+          name: "&eTheo tên (A → Z)"
+          lore:
+          - "&7Theo thứ tự bảng chữ cái."
+          - ""
+          - "#status#"
+        NAME_DESC:
+          name: "&eTheo tên (Z → A)"
+          lore:
+          - "&7Theo thứ tự bảng chữ cái ngược."
+          - ""
+          - "#status#"
+        AMOUNT:
+          name: "&eTheo số lượng (nhiều trước)"
+          lore:
+          - "&7Vật phẩm bạn có nhiều nhất đứng đầu."
+          - ""
+          - "#status#"
+        INSERTION:
+          name: "&eTheo thời gian thêm vào"
+          lore:
+          - "&7Thứ tự vật phẩm lần đầu vào kho của bạn."
+          - ""
+          - "#status#"
+      back:
+        name: "&cQuay lại"
+        lore:
+        - "&7Trở về kho."
+    filter:
+      title: "&0Bộ lọc thu nhặt"
+      item:
+        lore:
+        - ""
+        - "#status#"
+        - ""
+        - "&7Bấm để thêm/xóa vật phẩm này"
+        status_in: "&a✔ Có trong bộ lọc"
+        status_out: "&7✘ Không có trong bộ lọc"
+      info:
+        name: "&6Bộ lọc thu nhặt"
+        lore:
+        - ""
+        - "&7Bộ lọc trống: &fmọi vật phẩm trong kho &7đều được thu nhặt."
+        - "&7Bộ lọc có vật phẩm: &fchỉ các vật phẩm trong danh sách &7được thu nhặt."
+        - ""
+        - "&7Số vật phẩm trong bộ lọc: &e#count#"
+      clear:
+        name: "&cXóa bộ lọc"
+        lore:
+        - "&7Xóa mọi vật phẩm: thu nhặt tất cả như cũ."
+      back:
+        name: "&cQuay lại"
+        lore:
+        - "&7Trở về kho."
+      previous_page:
+        name: "&eTrang trước"
+        lore:
+        - "&7Trang #current_page#/#total_pages#"
+      next_page:
+        name: "&eTrang sau"
+        lore:
+        - "&7Trang #current_page#/#total_pages#"
+    upgrade:
+      title: "&0Nâng cấp kho"
+      info:
+        name: "&6Dung lượng kho"
+        lore:
+        - ""
+        - "&7Cấp: &e#level#&7/&e#max_level#"
+        - "&7Dung lượng: &e#capacity#"
+        - "&7Đã dùng: &e#used#"
+      upgrade:
+        name: "&aNâng cấp"
+        lore:
+        - ""
+        - "&7Cấp tiếp theo: &e#next_level#"
+        - "&7Dung lượng: &e#capacity# &7→ &a#next_capacity#"
+        - "&7Chi phí: &e#cost#"
+        - ""
+        - "#status#"
+        status_available: "&aBấm để nâng cấp"
+        status_max: "&cĐã đạt cấp tối đa"
+        status_owner: "&cChỉ chủ đảo mới nâng cấp được"
+        status_disabled: "&cNâng cấp đang bị tắt"
+      back:
+        name: "&cQuay lại"
+        lore:
+        - "&7Trở về kho."
+  storage:
+    title: "&8Kho đồ | #player#"
+    items:
+      storage_item:
+        lore:
+        - ""
+        - "&aSố lượng: &f#item_amount#"
+        - ""
+        - "&aTrạng thái: #autopickup_status#"
+        - "&aCó thể bán: #sellable#"
+        - ""
+        - "&eNhấn Q &6(phím vứt đồ)&e: &fBật/tắt tự động nhặt cho vật phẩm này"
+      convert_button:
+        name: "&6Chế tạo khối"
+        lore:
+        - ""
+        - "&7Chuyển vật phẩm trong kho thành khối."
+        - "&7Ví dụ: &f9 Iron Ingot &7→ &f1 Iron Block"
+        - ""
+        - "&6[Donate] &7Yêu cầu rank Donate"
+        - ""
+        - "&a▶ &7[&6Click trái&7]: &fChế tạo 1 khối"
+        - "&a▶ &7[&6Shift + click trái&7]: &fChế tạo tất cả có thể"
+      pickup_filter:
+        name: "&6Bộ lọc thu nhặt"
+        lore:
+        - ""
+        - "&7Chọn vật phẩm mà kho sẽ thu nhặt."
+        - "&7Bộ lọc trống = thu nhặt mọi vật phẩm."
+        - ""
+        - "&a▶ &7[&6Click&7]: &fMở bộ lọc"
+      sorting_options:
+        name: "&6Sắp xếp kho"
+        lore:
+        - ""
+        - "&7Hiện tại: #sort_mode#"
+        - ""
+        - "&a▶ &7[&6Click&7]: &fChọn cách sắp xếp vật phẩm"
+      toggle_item:
+        name: "&6Tự động thu nhặt"
+        lore:
+        - ""
+        - "&7Trạng thái: #status#"
+        - "&7Dung lượng kho: &f#used#/#capacity#"
+        - ""
+        - "&a▶ &7[&6Click trái&7]: &fBật/tắt tự động nhặt"
+        - "&a▶ &7[&6Shift + click trái&7]: &fNâng cấp dung lượng"
+      previous_page:
+        name: "&c◀ Trang trước"
+        lore:
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      next_page:
+        name: "&a▶ Trang sau"
+        lore:
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+  transfer-multi:
+    title: "&0Chuyển nhiều vật phẩm cho #player#"
+    items:
+      material_slots:
+        lore:
+        - "&7 "
+        - "&fBạn có: &a#current_amount#"
+        - "&fĐã chọn: &e#selected_amount#"
+        - "&fChuyển tối đa: &b#max_transferable#"
+        - "&7 "
+        - "&aClick trái: +1"
+        - "&bClick phải: +10"
+        - "&cShift + trái: -1"
+        - "&cShift + phải: -10"
+        - "&6Phím vứt đồ (Q): Nhập bằng chat"
+      player_info:
+        name: "&b#player#"
+        lore:
+        - "&7 "
+        - "&fĐang chuyển cho người chơi này"
+        - "&7 "
+      confirm_transfer:
+        name: "&a✓ Xác nhận chuyển nhiều vật phẩm"
+        lore:
+        - "&7 "
+        - "&fChuyển các vật phẩm đã chọn"
+        - "&fcho &b#player#"
+        - "&7 "
+        - "&fSố loại đã chọn: &e#selected_count#"
+        - "&7 "
+        - "&aBấm để xác nhận"
+      cancel_transfer:
+        name: "&c✗ Hủy chuyển đồ"
+        lore:
+        - "&7 "
+        - "&cBấm để hủy và quay lại"
+      clear_selection:
+        name: "&6Bỏ chọn tất cả"
+        lore:
+        - "&7 "
+        - "&cXóa mọi số lượng đã chọn"
+        - "&7 "
+      previous_page:
+        name: "&c◀ Trang trước"
+        lore:
+        - "&7Bấm để sang trang trước"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      next_page:
+        name: "&a▶ Trang sau"
+        lore:
+        - "&7Bấm để sang trang sau"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+  transfer:
+    title: "&0Chuyển đồ cho #player#"
+    items:
+      material_display:
+        name: "&e#material_name#"
+        lore:
+        - "&7 "
+        - "&fBạn có: &a#current_amount#"
+        - "&fSố lượng chuyển: &e#transfer_amount#"
+        - "&7 "
+        - "&7Bấm để đổi số lượng"
+      amount_decrease:
+        name: "&c- Giảm số lượng"
+        lore:
+        - "&7Bấm để giảm số lượng chuyển"
+        - "&7Hiện tại: &e#transfer_amount#"
+      amount_increase:
+        name: "&a+ Tăng số lượng"
+        lore:
+        - "&7Bấm để tăng số lượng chuyển"
+        - "&7Hiện tại: &e#transfer_amount#"
+      amount_input:
+        name: "&eSố lượng tùy chọn"
+        lore:
+        - "&7Bấm để nhập số lượng tùy chọn"
+        - "&7Gõ số lượng vào chat"
+      amount_max:
+        name: "&6Số lượng tối đa"
+        lore:
+        - "&7Bấm để đặt số lượng tối đa"
+        - "&7Tối đa: &a#current_amount#"
+      confirm_transfer:
+        name: "&a✓ Xác nhận chuyển đồ"
+        lore:
+        - "&7 "
+        - "&fChuyển &e#transfer_amount# #material_name#"
+        - "&fcho &b#player#"
+        - "&7 "
+        - "&aBấm để xác nhận"
+      cancel_transfer:
+        name: "&c✗ Hủy chuyển đồ"
+        lore:
+        - "&7 "
+        - "&cBấm để hủy và quay lại"
+      player_info:
+        name: "&b#player#"
+        lore:
+        - "&7 "
+        - "&fĐang chuyển cho người chơi này"
+        - "&7 "
+  view-storage:
+    title: "&0Xem kho | #player#"
+    items:
+      storage_item:
+        lore:
+        - "&7 "
+        - "&fSố lượng: &a#item_amount#"
+        - "&7 "
+        - "&eChỉ xem - Không thể chỉnh sửa"
+      previous_page:
+        name: "&c◀ Trang trước"
+        lore:
+        - "&7Bấm để sang trang trước"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      next_page:
+        name: "&a▶ Trang sau"
+        lore:
+        - "&7Bấm để sang trang sau"
+        - "&7Hiện tại: Trang &a#current_page#&7/&e#total_pages#"
+      view_info:
+        name: "&eChế độ xem"
+        lore:
+        - "&7 "
+        - "&fĐang xem kho của &e#player#"
+        - "&cChế độ chỉ xem"
+        - "&7 "
+        - "&7Bạn không thể chỉnh sửa kho này"
+      back_button:
+        name: "&aQuay lại kho của bạn"
+        lore:
+        - "&7 "
+        - "&eBấm để quay lại kho của bạn"

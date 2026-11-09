@@ -53,7 +53,7 @@ public class RecipeEditorListGUI implements IGUI {
         SoundManager.playItemSound(player, config, "gui_open_sound", context);
 
         String title = ChatUtils.colorizewp(player, Objects.requireNonNull(
-                config.getString("title")).replace("#player#", player.getName()));
+                net.danh.storage.Manager.LanguageManager.guiString(config, "title")).replace("#player#", player.getName()));
         Inventory inventory = Bukkit.createInventory(this, config.getInt("size") * 9, title);
 
         setupItems(inventory);
@@ -223,7 +223,7 @@ public class RecipeEditorListGUI implements IGUI {
     }
 
     private void deleteRecipe(Player player, Recipe recipe) {
-        String message = "Delete recipe: &e" + recipe.getName() + "&7?";
+        String message = File.getMessage().getString("crafting.delete_confirm", "#recipe#").replace("#recipe#", recipe.getName());
 
         SoundManager.setShouldPlayCloseSound(player, false);
         player.openInventory(new ConfirmationGUI(player, message,

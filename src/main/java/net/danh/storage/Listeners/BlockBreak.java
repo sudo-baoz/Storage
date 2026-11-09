@@ -2,6 +2,7 @@ package net.danh.storage.Listeners;
 
 import com.cryptomorin.xseries.XEnchantment;
 import net.danh.storage.Enchant.HasteEnchant;
+import net.danh.storage.Manager.LanguageManager;
 import net.danh.storage.Enchant.MultiplierEnchant;
 import net.danh.storage.Enchant.TNTEnchant;
 import net.danh.storage.Enchant.VeinMinerEnchant;
@@ -108,6 +109,15 @@ public class BlockBreak implements Listener {
 
     @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
     public void onBreak(@NotNull BlockBreakEvent e) {
+        LanguageManager.setContext(e.getPlayer());
+        try {
+            onBreakHandler(e);
+        } finally {
+            LanguageManager.clearContext();
+        }
+    }
+
+    private void onBreakHandler(@NotNull BlockBreakEvent e) {
         Player p = e.getPlayer();
         Block block = e.getBlock();
         boolean breakable = MineManager.checkBreak(block);

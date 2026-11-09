@@ -1,6 +1,7 @@
 package net.danh.storage.GUI;
 
 import net.danh.storage.Manager.ItemManager;
+import net.danh.storage.Manager.LanguageManager;
 import net.danh.storage.Manager.MineManager;
 import net.danh.storage.Manager.StorageSettings;
 import net.danh.storage.Utils.ChatUtils;
@@ -46,7 +47,7 @@ public class PickupFilterGUI extends StorageToolGUI {
             boolean inFilter = StorageSettings.getFilter(key).contains(material);
             String name = File.getConfig().getString("items." + material, material.split(";")[0]);
             ItemStack item = ItemManager.getItemConfigWithPlaceholders(player, material, name, itemSection,
-                    "#status#", itemSection.getString(inFilter ? "status_in" : "status_out", ""));
+                    "#status#", LanguageManager.guiString(itemSection, inFilter ? "status_in" : "status_out"));
             put(inventory, slots.get(i), item, (p, click) -> toggle(material, name, shown));
         }
 

@@ -58,7 +58,7 @@ public class MaterialSelectionGUI implements IGUI {
         SoundManager.playItemSound(player, config, "gui_open_sound", context);
 
         String title = ChatUtils.colorizewp(player, Objects.requireNonNull(
-                        config.getString("title")).replace("#category_name#",
+                        net.danh.storage.Manager.LanguageManager.guiString(config, "title")).replace("#category_name#",
                         getSelectionTitle())
                 .replace("#player#", player.getName()));
 

@@ -25,6 +25,15 @@ public class JoinQuit implements Listener {
 
     @EventHandler
     public void onJoin(@NotNull PlayerJoinEvent e) {
+        LanguageManager.setContext(e.getPlayer());
+        try {
+            onJoinHandler(e);
+        } finally {
+            LanguageManager.clearContext();
+        }
+    }
+
+    private void onJoinHandler(@NotNull PlayerJoinEvent e) {
         Player p = e.getPlayer();
         MineManager.loadPlayerData(p);
         FriendManager.loadPlayerDataAsync(p, () -> {

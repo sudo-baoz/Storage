@@ -72,7 +72,7 @@ public class ViewStorageGUI implements IGUI {
 
         // Create inventory with target player's name
         String title = ChatUtils.colorizewp(viewer, Objects.requireNonNull(
-                config.getString("title")).replace("#player#", targetName));
+                net.danh.storage.Manager.LanguageManager.guiString(config, "title")).replace("#player#", targetName));
 
         Inventory inventory = Bukkit.createInventory(this, config.getInt("size") * 9, title);
 

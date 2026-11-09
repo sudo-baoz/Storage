@@ -278,3 +278,11 @@ permissions:
   storage.donate.craft:
     description: Use the Crafter button (craft stored items into blocks)
     default: false
+
+  storage.language:
+    description: Change your own language
+    default: true
+
+  storage.language.reload:
+    description: Reload the language files
+    default: op

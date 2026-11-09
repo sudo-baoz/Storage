@@ -1,6 +1,7 @@
 package net.danh.storage.Listeners;
 
 import net.danh.storage.Action.*;
+import net.danh.storage.Manager.LanguageManager;
 import net.danh.storage.GUI.ConvertOptionGUI;
 import net.danh.storage.GUI.Crafting.RecipeListGUI;
 import net.danh.storage.GUI.PersonalStorage;
@@ -50,6 +51,15 @@ public class ChatListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onChat(@NotNull AsyncPlayerChatEvent e) {
+        LanguageManager.setContext(e.getPlayer());
+        try {
+            onChatHandler(e);
+        } finally {
+            LanguageManager.clearContext();
+        }
+    }
+
+    private void onChatHandler(@NotNull AsyncPlayerChatEvent e) {
         Player p = e.getPlayer();
         UUID playerId = p.getUniqueId();
         String message = ChatColor.stripColor(e.getMessage());

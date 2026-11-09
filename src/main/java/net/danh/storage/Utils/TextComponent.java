@@ -117,17 +117,17 @@ public class TextComponent {
             } catch (Exception e) {
                 // Fallback to regular messages
                 if (hasPrev) {
-                    player.sendMessage(ChatUtils.colorizewp(prevText + "     " + (hasNext ? nextText : "&8Next ▶")));
+                    player.sendMessage(ChatUtils.colorizewp(prevText + "     " + (hasNext ? nextText : navDisabled("transfer.log_nav_next_disabled"))));
                 } else {
-                    player.sendMessage(ChatUtils.colorizewp("&8◀ Previous     " + (hasNext ? nextText : "&8Next ▶")));
+                    player.sendMessage(ChatUtils.colorizewp(navDisabled("transfer.log_nav_previous_disabled") + "     " + (hasNext ? nextText : navDisabled("transfer.log_nav_next_disabled"))));
                 }
             }
         } else {
             // For very old versions, just send regular message
             if (hasPrev) {
-                player.sendMessage(ChatUtils.colorizewp(prevText + "     " + (hasNext ? nextText : "&8Next ▶")));
+                player.sendMessage(ChatUtils.colorizewp(prevText + "     " + (hasNext ? nextText : navDisabled("transfer.log_nav_next_disabled"))));
             } else {
-                player.sendMessage(ChatUtils.colorizewp("&8◀ Previous     " + (hasNext ? nextText : "&8Next ▶")));
+                player.sendMessage(ChatUtils.colorizewp(navDisabled("transfer.log_nav_previous_disabled") + "     " + (hasNext ? nextText : navDisabled("transfer.log_nav_next_disabled"))));
             }
         }
     }
@@ -162,7 +162,7 @@ public class TextComponent {
             nextComponent = createClickableComponent(textComponentClass, hoverEventClass, clickEventClass, baseComponentClass,
                     ChatUtils.colorizewp(nextText), ChatUtils.colorizewp(nextHover), nextCommand);
         } else {
-            nextComponent = textConstructor.newInstance(ChatUtils.colorizewp("&8Next ▶"));
+            nextComponent = textConstructor.newInstance(ChatUtils.colorizewp(navDisabled("transfer.log_nav_next_disabled")));
         }
 
         // Combine components
@@ -232,5 +232,9 @@ public class TextComponent {
         }
 
         return component;
+    }
+
+    private static String navDisabled(String key) {
+        return "&8" + File.getMessage().getString(key, "");
     }
 }

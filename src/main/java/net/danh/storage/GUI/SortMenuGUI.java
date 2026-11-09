@@ -1,6 +1,7 @@
 package net.danh.storage.GUI;
 
 import net.danh.storage.Manager.ItemManager;
+import net.danh.storage.Manager.LanguageManager;
 import net.danh.storage.Manager.MineManager;
 import net.danh.storage.Manager.StorageSettings;
 import net.danh.storage.Manager.StorageSettings.SortMode;
@@ -35,11 +36,11 @@ public class SortMenuGUI extends StorageToolGUI {
                 }
                 boolean selected = mode == current;
                 ItemStack item = ItemManager.getItemConfigWithPlaceholders(player, section, "#status#",
-                        config.getString(selected ? "status_selected" : "status_unselected", ""));
+                        LanguageManager.guiString(config, selected ? "status_selected" : "status_unselected"));
                 if (selected && item != null) {
                     glow(item);
                 }
-                put(inventory, section.getInt("slot"), item, (p, click) -> choose(mode, section.getString("name", "")));
+                put(inventory, section.getInt("slot"), item, (p, click) -> choose(mode, LanguageManager.guiString(section, "name")));
             }
         }
         addBack(inventory);

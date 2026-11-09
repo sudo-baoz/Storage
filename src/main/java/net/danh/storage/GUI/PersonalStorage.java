@@ -83,7 +83,7 @@ public class PersonalStorage implements IGUI {
     }
 
     private static String format(long value) {
-        return String.format(Locale.US, "%,d", value);
+        return net.danh.storage.Manager.LanguageManager.formatNumber(value);
     }
 
     @NotNull
@@ -97,7 +97,7 @@ public class PersonalStorage implements IGUI {
     public Inventory getInventory(SoundContext context) {
         SoundManager.playItemSound(p, config, "gui_open_sound", context);
         Inventory inventory = Bukkit.createInventory(this, config.getInt("size") * 9,
-                ChatUtils.colorizewp(p, Objects.requireNonNull(config.getString("title"))
+                ChatUtils.colorizewp(p, Objects.requireNonNull(net.danh.storage.Manager.LanguageManager.guiString(config, "title"))
                         .replace("#player#", p.getName())));
         String key = MineManager.storageKey(p);
         List<String> item_list = sortedItems(key, MineManager.getOrderedPluginBlocks(),
@@ -146,7 +146,7 @@ public class PersonalStorage implements IGUI {
 
     private String sortLabel(SortMode mode) {
         ConfigurationSection label = File.getStorageToolsConfig().getConfigurationSection("sort.modes." + mode.name());
-        return label == null ? mode.name() : ChatUtils.colorizewp(p, label.getString("name", mode.name()));
+        return label == null ? mode.name() : ChatUtils.colorizewp(p, net.danh.storage.Manager.LanguageManager.guiString(label, "name"));
     }
 
     private List<String> slotsOf(String tag) {

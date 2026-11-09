@@ -117,7 +117,8 @@ public class MiningContestEvent extends BaseEvent {
             position++;
         }
 
-        String top3 = top3Builder.length() > 0 ? top3Builder.toString() : "&7No participants yet";
+        String top3 = top3Builder.length() > 0 ? top3Builder.toString()
+                : File.getMessage().getString("events.mining_contest.chat.no_participants_yet", "-");
 
         String progressMessage = File.getMessage().getString("events.mining_contest.chat.progress_summary");
         progressMessage = progressMessage.replace("#top3#", top3)

@@ -442,7 +442,7 @@ public final class Storage extends JavaPlugin {
         File.loadFiles();
         File.loadGUI();
         File.updateConfig();
-        File.updateMessage();
+        LanguageManager.load();
         File.updateEventConfig();
         File.updateEnchantConfig();
         File.updateSpecialMaterialConfig();

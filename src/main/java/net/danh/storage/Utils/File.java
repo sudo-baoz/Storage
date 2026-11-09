@@ -2,6 +2,7 @@ package net.danh.storage.Utils;
 
 import com.tchristofferson.configupdater.ConfigUpdater;
 import net.danh.storage.Manager.ConvertOreManager;
+import net.danh.storage.Manager.LanguageManager;
 import net.danh.storage.Manager.MineManager;
 import net.danh.storage.Manager.SpecialMaterial.SpecialMaterialManager;
 import net.danh.storage.Storage;
@@ -145,8 +146,33 @@ public class File {
         return getFileSetting().get("config.yml");
     }
 
+    /**
+     * Messages of the current language (see {@link LanguageManager}).
+     */
     public static FileConfiguration getMessage() {
-        return getFileSetting().get("message.yml");
+        return LanguageManager.messages();
+    }
+
+    private static volatile FileConfiguration bundledEnglish;
+
+    /**
+     * Bundled English texts: used before the language files are loaded (early startup, unit tests).
+     */
+    public static FileConfiguration getLegacyMessage() {
+        FileConfiguration cached = bundledEnglish;
+        if (cached == null) {
+            java.io.InputStream in = File.class.getClassLoader().getResourceAsStream("lang/en_US.yml");
+            cached = in == null ? new YamlConfiguration()
+                    : YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+            bundledEnglish = cached;
+        }
+        return cached;
+    }
+
+    public static java.util.List<String> guiFileNames() {
+        return java.util.List.of("storage", "items", "transfer", "transfer-multi", "convert-ore", "view-storage",
+                "recipe-list", "recipe-editor", "recipe-editor-list", "material-selection", "material-editor",
+                "confirmation", "storage-tools");
     }
 
     public static FileConfiguration getGUIStorage() {
@@ -219,7 +245,7 @@ public class File {
     }
 
     public static void loadFiles() {
-        getFileSetting().build("", false, "config.yml", "message.yml", "events.yml", "enchants.yml",
+        getFileSetting().build("", false, "config.yml", "events.yml", "enchants.yml",
                 "special_material.yml", "crafting.yml",
                 "friendstorage.yml");
         copyExampleFiles();
@@ -227,7 +253,7 @@ public class File {
     }
 
     public static void reloadFiles() {
-        getFileSetting().reload("config.yml", "message.yml", "events.yml", "enchants.yml", "special_material.yml",
+        getFileSetting().reload("config.yml", "events.yml", "enchants.yml", "special_material.yml",
                 "crafting.yml", "friendstorage.yml", "GUI/storage.yml", "GUI/items.yml",
                 "GUI/transfer.yml", "GUI/transfer-multi.yml", "GUI/convert-ore.yml", "GUI/view-storage.yml",
                 "GUI/recipe-list.yml", "GUI/recipe-editor.yml", "GUI/recipe-editor-list.yml",
@@ -236,6 +262,7 @@ public class File {
             MineManager.savePlayerData(p);
             MineManager.loadPlayerData(p);
         }
+        LanguageManager.reload();
         ConvertOreManager.loadConvertOptions();
         SpecialMaterialManager.loadSpecialMaterials();
         AutoPickupCache.reload();
@@ -277,10 +304,6 @@ public class File {
                 "items",
                 "blocks",
                 "worth");
-    }
-
-    public static void updateMessage() {
-        updateVersionedConfig("message.yml", "message_version", "message");
     }
 
     public static void updateEventConfig() {

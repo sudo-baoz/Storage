@@ -118,10 +118,10 @@ public class ChatNavigationHelper {
         }
 
         if (hasPrev) {
-            player.sendMessage(ChatUtils.colorizewp("&7Previous: &e" + prevCommand));
+            player.sendMessage(ChatUtils.colorizewp(messageConfig.getString("common.nav_previous_prefix", "") + prevCommand));
         }
         if (hasNext) {
-            player.sendMessage(ChatUtils.colorizewp("&7Next: &e" + nextCommand));
+            player.sendMessage(ChatUtils.colorizewp(messageConfig.getString("common.nav_next_prefix", "") + nextCommand));
         }
     }
 

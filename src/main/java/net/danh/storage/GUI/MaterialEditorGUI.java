@@ -52,7 +52,7 @@ public class MaterialEditorGUI implements IGUI {
         SoundManager.playItemSound(player, config, "gui_open_sound", context);
 
         String title = ChatUtils.colorizewp(player, Objects.requireNonNull(
-                config.getString("title")).replace("#recipe_name#",
+                net.danh.storage.Manager.LanguageManager.guiString(config, "title")).replace("#recipe_name#",
                 recipe.getName()));
         Inventory inventory = Bukkit.createInventory(this, config.getInt("size") * 9, title);
 

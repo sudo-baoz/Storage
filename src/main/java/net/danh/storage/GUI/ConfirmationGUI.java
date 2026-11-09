@@ -48,7 +48,7 @@ public class ConfirmationGUI implements IGUI {
         SoundManager.playItemSound(player, config, "gui_open_sound", context);
 
         String title = ChatUtils.colorizewp(player, Objects.requireNonNull(
-                config.getString("title")));
+                net.danh.storage.Manager.LanguageManager.guiString(config, "title")));
         Inventory inventory = Bukkit.createInventory(this, config.getInt("size") * 9, title);
 
         setupItems(inventory);
