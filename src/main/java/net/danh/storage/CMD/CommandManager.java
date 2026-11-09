@@ -46,6 +46,7 @@ public class CommandManager {
         registerCommand("friends", new FriendCommand());
         registerCommand("island", new IslandCommand());
         registerCommand("lang", new LangCommand());
+        registerCommand("upgrade", new net.danh.storage.CMD.handler.user.UpgradeCommand());
     }
 
     private void registerCommand(String name, CommandHandler handler) {

@@ -336,6 +336,17 @@ public final class LanguageManager {
     // ---------- lookups ----------
 
     /**
+     * Money amount with up to 2 decimals, grouped like {@link #formatNumber(long)}.
+     */
+    public static @NotNull String formatDecimal(double value) {
+        String[] parts = currentCode().split("_");
+        Locale locale = parts.length == 2 ? new Locale(parts[0], parts[1]) : Locale.US;
+        java.text.NumberFormat format = java.text.NumberFormat.getNumberInstance(locale);
+        format.setMaximumFractionDigits(2);
+        return format.format(value);
+    }
+
+    /**
      * Number with the thousands separator of the current language (vi: 2.450, en: 2,450).
      */
     public static @NotNull String formatNumber(long value) {

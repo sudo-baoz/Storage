@@ -35,6 +35,7 @@ class TotalCapacityTest {
     private static final String COBBLE = "COBBLESTONE;0";
 
     private final YamlConfiguration config = new YamlConfiguration();
+    private final YamlConfiguration upgrades = new YamlConfiguration();
     private final Player p = player("Miner");
     private MockedStatic<File> fileMock;
 
@@ -54,11 +55,13 @@ class TotalCapacityTest {
         config.set("crafter.permission", "storage.donate.craft");
         config.set("crafter.recipes." + IRON + ".block", IRON_BLOCK);
         config.set("crafter.recipes." + IRON + ".amount", 9);
-        config.set("storage_upgrade.enabled", true);
-        config.set("storage_upgrade.levels.1.capacity", 5000);
-        config.set("storage_upgrade.levels.2.capacity", 20000);
+        upgrades.set("settings.enabled", true);
+        upgrades.set("levels.1.capacity", 5000);
+        upgrades.set("levels.2.capacity", 20000);
         fileMock = mockStatic(File.class);
         fileMock.when(File::getConfig).thenReturn(config);
+        fileMock.when(File::getUpgradesConfig).thenReturn(upgrades);
+        StorageUpgrade.reload();
         for (String material : new String[]{IRON, IRON_BLOCK, COAL, COBBLE}) {
             MineManager.addPluginBlocks(material);
         }

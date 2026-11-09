@@ -58,17 +58,4 @@ public class SortMenuGUI extends StorageToolGUI {
         // Re-open so the selection marker moves; the main storage reads the saved mode when opened.
         reopen(new SortMenuGUI(player));
     }
-
-    private static void glow(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return;
-        }
-        // XEnchantment resolves the enchantment name across versions (DURABILITY vs UNBREAKING).
-        com.cryptomorin.xseries.XEnchantment.matchXEnchantment("UNBREAKING")
-                .map(com.cryptomorin.xseries.XEnchantment::getEnchant)
-                .ifPresent(enchant -> meta.addEnchant(enchant, 1, true));
-        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        item.setItemMeta(meta);
-    }
 }

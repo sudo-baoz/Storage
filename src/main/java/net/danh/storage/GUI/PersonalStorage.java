@@ -244,7 +244,7 @@ public class PersonalStorage implements IGUI {
                 "#capacity#", format(MineManager.getMaxBlock(p)));
         addButton(inventory, tag, section, stack, (player, click) -> {
             if (click == ClickType.SHIFT_LEFT) {
-                open(player, new UpgradeGUI(player));
+                UpgradeGUI.show(player);
             } else if (click == ClickType.LEFT) {
                 MineManager.setToggleStatus(p, !MineManager.getToggleStatus(p));
                 MineManager.savePlayerData(p);

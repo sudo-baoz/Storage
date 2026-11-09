@@ -585,13 +585,23 @@ storage_tools:
     crafted_all: "#prefix# &aCrafted &e#amount# &ablocks from your storage."
     disabled: "#prefix# &cThe Crafter is disabled on this server."
   upgrade:
-    success: "#prefix# &aStorage upgraded to level &e#level#&a! New capacity: &e#capacity# &aitems."
+    success: "#prefix# &aStorage upgraded to level &e#level#&a! New capacity: &e#current_capacity# &aitems."
     max_level: "#prefix# &cYour storage is already at the maximum level."
-    no_permission: "#prefix# &cYou don't have permission for the next upgrade level."
-    no_money: "#prefix# &cYou can't afford this upgrade (&e#cost#&c)."
-    no_economy: "#prefix# &cNo economy plugin is available, so this upgrade can't be bought."
+    already_owned: "#prefix# &cYou already own level &e#level#&c."
+    locked: "#prefix# &cLevel &e#level# &cis locked: complete level &e#required_level# &cfirst."
+    no_permission: "#prefix# &cYou don't have permission for upgrade level &e#level#&c."
+    no_provider: "#prefix# &cVault or PlayerPoints is not available, so this upgrade can't be bought."
+    no_money: "#prefix# &cYou don't have enough money or points for this upgrade."
     not_owner: "#prefix# &cOnly the island owner can upgrade the shared storage."
     disabled: "#prefix# &cStorage upgrades are disabled on this server."
+    busy: "#prefix# &cAnother upgrade is being processed, please wait."
+    save_failed: "#prefix# &cThe upgrade could not be saved. You were not charged (or the payment was refunded)."
+    no_items: "#prefix# &cYou don't have enough items to upgrade."
+    no_exp: "#prefix# &cYou don't have enough experience to upgrade."
+    no_resources: "#prefix# &cYou don't meet all the upgrade requirements."
+    payment_failed: "#prefix# &cUpgrade payment failed. Nothing was taken."
+    bad_config: "#prefix# &cThis upgrade level is misconfigured. Please tell an admin."
+    invalid: "#prefix# &cThat upgrade level does not exist."
   filter:
     added: "#prefix# &aAdded &e#item# &ato the auto-pickup filter."
     removed: "#prefix# &eRemoved &f#item# &efrom the auto-pickup filter."
@@ -606,9 +616,118 @@ language:
   list_entry: "&8 - &e#language#"
   reloaded: "#prefix# &aLanguage files reloaded."
   per_player_disabled: "#prefix# &cPlayers cannot choose a language on this server."
+upgrade:
+  command:
+    no-permission: "&cYou don't have permission to open the storage upgrade menu."
+    player-only: "&cThis command can only be used by players."
+    disabled: "&cThe storage upgrade system is currently disabled."
+    usage: "&eUsage: /storage upgrade"
+  requirements:
+    title: "&6UPGRADE REQUIREMENTS"
+    mark-ok: "&a✔ "
+    mark-missing: "&c✘ "
+    vault: "&7Vault: &f#current#&8/&e#required#"
+    playerpoints: "&7PlayerPoints: &f#current#&8/&e#required#"
+    exp-levels: "&7EXP Levels: &f#current#&8/&e#required#"
+    exp-points: "&7EXP Points: &f#current#&8/&e#required#"
+    item: "&7#item#: &f#current#&8/&e#required#"
+  items:
+    IRON_INGOT: "Iron Ingot"
+    GOLD_INGOT: "Gold Ingot"
+    DIAMOND: "Diamond"
+    EMERALD: "Emerald"
+    NETHERITE_INGOT: "Netherite Ingot"
+    NETHERITE_BLOCK: "Block of Netherite"
 common:
   nav_previous_prefix: "&7Previous: &e"
   nav_next_prefix: "&7Next: &e"
+upgrade_gui:
+  title: "&0Storage Upgrade"
+  back:
+    name: "&cBack"
+    lore:
+    - "&7Return to the storage."
+  close:
+    name: "&cClose"
+    lore:
+    - "&7Close this menu."
+  name:
+    owned: "&a✔ STORAGE LEVEL #level#"
+    max: "&6★ STORAGE LEVEL #level# ★"
+    available: "&6✦ STORAGE UPGRADE • LEVEL #level#"
+    locked: "&c✘ STORAGE LEVEL #level#"
+  lore:
+    available:
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&7Upgrade info"
+    - ""
+    - "&7▪ Current level: &e#current_level#"
+    - "&7▪ Current capacity: &f#current_capacity#"
+    - "&7▪ New capacity: &a#new_capacity#"
+    - "&7▪ Increase: &a+#increase#"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&6UPGRADE REQUIREMENTS"
+    - ""
+    - "#requirements#"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "#status#"
+    - "#hint#"
+    owned:
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&7Capacity: &f#capacity# items"
+    - "&7Status: &aOwned"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&a✔ You unlocked this level."
+    locked:
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&7Capacity: &f#capacity#"
+    - "#requirements#"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&c✘ This level is locked."
+    - "&7Complete level #required_level# first."
+    max:
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&7Capacity: &a#capacity#"
+    - "&7Status: &6MAX LEVEL"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&e★ You reached the maximum storage level!"
+  status:
+    ready: "&a✔ All requirements met!"
+    insufficient: "&c✘ Requirements not met!"
+    no_permission: "&c✘ You lack the permission for this level."
+    no_provider: "&c✘ A payment method (Vault/PlayerPoints) is not available."
+    not_owner: "&c✘ Only the island owner can upgrade."
+    disabled: "&c✘ Upgrades are disabled."
+    bad_config: "&c✘ This level is misconfigured; tell an admin."
+  hint:
+    ready: "&e➤ Click to upgrade!"
+  confirm:
+    title: "&0Confirm Upgrade"
+    confirm:
+      name: "&a&lCONFIRM"
+      lore:
+      - "&7Pay the requirements and unlock level &e#level#&7."
+    cancel:
+      name: "&c&lCANCEL"
+      lore:
+      - "&7Go back without paying."
+    info:
+      name: "&6✦ UPGRADE TO LEVEL #level#"
+      lore:
+      - ""
+      - "&8━━━━━━━━━━━━━━━━━━━━"
+      - "&7New capacity: &f#new_capacity#"
+      - ""
+      - "#requirements#"
 gui:
   confirmation:
     title: "&0Confirm Action"
@@ -1076,32 +1195,7 @@ gui:
         name: "&eNext page"
         lore:
         - "&7Page #current_page#/#total_pages#"
-    upgrade:
-      title: "&0Upgrade Storage"
-      info:
-        name: "&6Storage capacity"
-        lore:
-        - ""
-        - "&7Level: &e#level#&7/&e#max_level#"
-        - "&7Capacity: &e#capacity#"
-        - "&7Used: &e#used#"
-      upgrade:
-        name: "&aUpgrade"
-        lore:
-        - ""
-        - "&7Next level: &e#next_level#"
-        - "&7Capacity: &e#capacity# &7→ &a#next_capacity#"
-        - "&7Cost: &e#cost#"
-        - ""
-        - "#status#"
-        status_available: "&aClick to upgrade"
-        status_max: "&cMaximum level reached"
-        status_owner: "&cOnly the island owner can upgrade"
-        status_disabled: "&cUpgrades are disabled"
-      back:
-        name: "&cBack"
-        lore:
-        - "&7Return to the storage."
+
   storage:
     title: "&8Storage | #player#"
     items:

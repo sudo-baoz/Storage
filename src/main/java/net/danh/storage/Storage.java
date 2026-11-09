@@ -224,6 +224,66 @@ public final class Storage extends JavaPlugin {
         return false;
     }
 
+    /**
+     * Vault balance, or -1 when no economy is hooked or the lookup fails.
+     */
+    public static double getVaultBalance(Player player) {
+        try {
+            if (vault2Economy != null) {
+                Object balance = vault2Economy.getClass().getMethod("balance", String.class, java.util.UUID.class)
+                        .invoke(vault2Economy, getStorage().getDescription().getName(), player.getUniqueId());
+                return ((java.math.BigDecimal) balance).doubleValue();
+            }
+            if (vaultEconomy != null) {
+                return (double) vaultEconomy.getClass().getMethod("getBalance", org.bukkit.OfflinePlayer.class)
+                        .invoke(vaultEconomy, player);
+            }
+        } catch (Throwable t) {
+            getStorage().getLogger().warning("Vault balance lookup failed: " + t.getMessage());
+        }
+        return -1;
+    }
+
+    public static boolean isPlayerPointsHooked() {
+        return playerPointsApi != null;
+    }
+
+    /**
+     * PlayerPoints balance, or -1 when PlayerPoints is missing or the lookup fails.
+     */
+    public static long getPlayerPointsBalance(Player player) {
+        if (playerPointsApi == null) {
+            return -1;
+        }
+        try {
+            return ((java.lang.Number) playerPointsApi.getClass().getMethod("look", java.util.UUID.class)
+                    .invoke(playerPointsApi, player.getUniqueId())).longValue();
+        } catch (Throwable t) {
+            getStorage().getLogger().warning("PlayerPoints balance lookup failed: " + t.getMessage());
+            return -1;
+        }
+    }
+
+    /**
+     * Takes points; true only when PlayerPoints confirms it.
+     */
+    public static boolean withdrawFromPlayerPoints(Player player, int points) {
+        if (playerPointsApi == null || points < 0) {
+            return false;
+        }
+        if (points == 0) {
+            return true;
+        }
+        try {
+            Object result = playerPointsApi.getClass().getMethod("take", java.util.UUID.class, int.class)
+                    .invoke(playerPointsApi, player.getUniqueId(), points);
+            return result instanceof Boolean ok && ok;
+        } catch (Throwable t) {
+            getStorage().getLogger().warning("PlayerPoints withdraw failed: " + t.getMessage());
+            return false;
+        }
+    }
+
     public static boolean depositToPlayerPoints(Player player, double pointsAmount) {
         if (player == null || pointsAmount <= 0) {
             return false;
@@ -448,6 +508,7 @@ public final class Storage extends JavaPlugin {
         File.updateSpecialMaterialConfig();
         File.updateCraftingConfig();
         File.updateFriendStorageConfig();
+        File.updateUpgradesConfig();
 
         MineManager.loadPlacedBlocks();
 

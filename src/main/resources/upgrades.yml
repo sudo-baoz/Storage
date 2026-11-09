@@ -1,0 +1,145 @@
+# Storage upgrade system (Copper Golem: Shift + left click)
+# Texts (names, lore, messages) live in lang/<language>.yml under upgrade_gui and storage_tools.upgrade.
+upgrades_version: 1
+
+settings:
+  enabled: true
+  # Levels must be bought one by one
+  require-sequential-upgrade: true
+  # Ask for confirmation (27-slot menu) before charging
+  confirm-purchase: true
+  play-sound: true
+  # Re-open the menu after a purchase so it shows the new state
+  refresh-gui-after-upgrade: true
+
+gui:
+  # 45 = 5 rows
+  size: 45
+  slots:
+    level-1: 11
+    level-2: 13
+    level-3: 15
+    level-4: 29
+    level-5: 31
+    level-6: 33
+    back: 39
+    close: 41
+  decoration:
+    material: GRAY_STAINED_GLASS_PANE
+    hide-tooltip: true
+    name: "&r"
+    amount: 1
+
+confirm:
+  slots:
+    confirm: 11
+    info: 13
+    cancel: 15
+  materials:
+    confirm: EMERALD_BLOCK
+    cancel: REDSTONE_BLOCK
+
+sounds:
+  enabled: true
+  open:
+    sound: BLOCK_CHEST_OPEN
+    volume: 1.0
+    pitch: 1.0
+  success:
+    sound: ENTITY_PLAYER_LEVELUP
+    volume: 1.0
+    pitch: 1.2
+  fail:
+    sound: ENTITY_VILLAGER_NO
+    volume: 1.0
+    pitch: 1.0
+
+# capacity: total items the storage holds at this level
+# requirements: everything listed must be present to buy the level; a value of 0 (or an empty list) is not required.
+#   vault / playerpoints: money (PlayerPoints are whole numbers)
+#   exp.type: LEVELS (experience levels) or POINTS (real experience points)
+#   items: plain vanilla items from the main inventory (renamed / enchanted / custom items don't count)
+# A level without "requirements" but with the old "currency" + "price" keys still works (same cost as before).
+levels:
+  1:
+    capacity: 10000
+    material: IRON_INGOT
+    custom-model-data: 0
+    permission: ""
+    requirements:
+      vault: 10000
+      playerpoints: 0
+      exp:
+        type: LEVELS
+        amount: 0
+      items: []
+  2:
+    capacity: 25000
+    material: GOLD_INGOT
+    custom-model-data: 0
+    permission: ""
+    requirements:
+      vault: 5000
+      playerpoints: 0
+      exp:
+        type: LEVELS
+        amount: 0
+      items:
+        - material: IRON_INGOT
+          amount: 16
+  3:
+    capacity: 50000
+    material: DIAMOND
+    custom-model-data: 0
+    permission: ""
+    requirements:
+      vault: 0
+      playerpoints: 100
+      exp:
+        type: LEVELS
+        amount: 10
+      items: []
+  4:
+    capacity: 100000
+    material: EMERALD
+    custom-model-data: 0
+    permission: ""
+    requirements:
+      vault: 50000
+      playerpoints: 0
+      exp:
+        type: LEVELS
+        amount: 30
+      items:
+        - material: DIAMOND
+          amount: 32
+  5:
+    capacity: 250000
+    material: NETHER_STAR
+    custom-model-data: 0
+    permission: ""
+    requirements:
+      vault: 0
+      playerpoints: 250
+      exp:
+        type: POINTS
+        amount: 1000
+      items:
+        - material: EMERALD
+          amount: 64
+        - material: NETHERITE_INGOT
+          amount: 5
+  6:
+    capacity: 500000
+    material: NETHERITE_BLOCK
+    custom-model-data: 0
+    permission: ""
+    requirements:
+      vault: 100000
+      playerpoints: 500
+      exp:
+        type: LEVELS
+        amount: 50
+      items:
+        - material: NETHERITE_INGOT
+          amount: 64

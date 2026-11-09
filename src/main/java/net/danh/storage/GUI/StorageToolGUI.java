@@ -28,8 +28,40 @@ public abstract class StorageToolGUI implements IGUI {
     protected final ConfigurationSection config;
 
     StorageToolGUI(Player player, String section) {
+        this(player, File.getStorageToolsConfig().getConfigurationSection(section));
+    }
+
+    protected StorageToolGUI(Player player, ConfigurationSection config) {
         this.player = player;
-        this.config = File.getStorageToolsConfig().getConfigurationSection(section);
+        this.config = config;
+    }
+
+    protected int rows() {
+        return config.getInt("size", 3);
+    }
+
+    protected String title() {
+        return net.danh.storage.Manager.LanguageManager.guiString(config, "title");
+    }
+
+    /**
+     * Item used to fill every empty slot.
+     */
+    protected ConfigurationSection decoration() {
+        return File.getStorageToolsConfig().getConfigurationSection("decorates");
+    }
+
+    protected static void glow(ItemStack item) {
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return;
+        }
+        // XEnchantment resolves the enchantment name across versions (DURABILITY vs UNBREAKING).
+        com.cryptomorin.xseries.XEnchantment.matchXEnchantment("UNBREAKING")
+                .map(com.cryptomorin.xseries.XEnchantment::getEnchant)
+                .ifPresent(enchant -> meta.addEnchant(enchant, 1, true));
+        meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+        item.setItemMeta(meta);
     }
 
     protected abstract void build(Inventory inventory);
@@ -43,9 +75,10 @@ public abstract class StorageToolGUI implements IGUI {
     @NotNull
     @Override
     public Inventory getInventory(SoundContext context) {
-        int rows = Math.max(1, Math.min(6, config.getInt("size", 3)));
+        int rows = Math.max(1, Math.min(6, rows()));
+        String title = title();
         Inventory inventory = Bukkit.createInventory(this, rows * 9,
-                ChatUtils.colorizewp(player, config.getString("title", "Storage")));
+                ChatUtils.colorizewp(player, title == null ? "Storage" : title));
         build(inventory);
         fillEmpty(inventory);
         return inventory;
@@ -81,7 +114,7 @@ public abstract class StorageToolGUI implements IGUI {
     }
 
     private void fillEmpty(Inventory inventory) {
-        ConfigurationSection decorates = File.getStorageToolsConfig().getConfigurationSection("decorates");
+        ConfigurationSection decorates = decoration();
         if (decorates == null) {
             return;
         }

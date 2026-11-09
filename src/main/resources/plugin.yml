@@ -283,6 +283,10 @@ permissions:
     description: Change your own language
     default: true
 
+  storage.upgrade.open:
+    description: Open the storage upgrade menu (buying a level may need its own permission)
+    default: true
+
   storage.language.reload:
     description: Reload the language files
     default: op

@@ -485,24 +485,6 @@ crafter:
       block: LAPIS_BLOCK;0
       amount: 9
 
-# Total capacity upgrades (Copper Golem button, Shift + left click).
-# Capacity counts ALL items together. A level's capacity replaces the base capacity only when it is higher.
-# Cost is charged through Vault; permission is optional (empty = none). Only the island owner can upgrade.
-storage_upgrade:
-  enabled: true
-  levels:
-    1:
-      capacity: 200000
-      cost: 50000
-      permission: ""
-    2:
-      capacity: 500000
-      cost: 150000
-      permission: ""
-    3:
-      capacity: 1000000
-      cost: 400000
-      permission: ""
 
 # Languages: files live in plugins/Storage/lang/<code>.yml (UTF-8). Add a file there and list its code below
 # to support another language; players choose with /storage lang <code>.
@@ -518,3 +500,22 @@ language:
   use-client-locale: false
   # Used when a key is missing in the selected language
   fallback: "en_US"
+
+# Short numbers in the storage upgrade menu (display only, real amounts are never rounded)
+number-format:
+  compact:
+    enabled: true
+    # 0-6 digits after the point; the number is cut, not rounded up (999999 -> 999.99K)
+    decimal-places: 2
+    trim-trailing-zeros: true
+    suffixes:
+      thousand: "K"
+      million: "M"
+      billion: "B"
+      trillion: "T"
+    apply-to:
+      vault: true
+      playerpoints: true
+      exp: false
+      items: false
+      storage-capacity: false

@@ -586,13 +586,23 @@ storage_tools:
     crafted_all: "#prefix# &aĐã chế tạo &e#amount# &akhối từ kho của bạn."
     disabled: "#prefix# &cTính năng chế tạo khối đã bị tắt trên máy chủ này."
   upgrade:
-    success: "#prefix# &aNâng cấp kho thành công lên cấp &e#level#&a! Dung lượng mới: &e#capacity# &avật phẩm."
+    success: "#prefix# &aNâng cấp kho thành công lên cấp &e#level#&a! Dung lượng mới: &e#current_capacity# &avật phẩm."
     max_level: "#prefix# &cKho của bạn đã đạt cấp tối đa."
-    no_permission: "#prefix# &cBạn không có quyền cho cấp nâng cấp tiếp theo."
-    no_money: "#prefix# &cBạn không đủ tiền để nâng cấp (&e#cost#&c)."
-    no_economy: "#prefix# &cKhông có plugin kinh tế nên không thể mua nâng cấp này."
+    already_owned: "#prefix# &cBạn đã sở hữu cấp &e#level#&c."
+    locked: "#prefix# &cCấp &e#level# &cchưa mở khóa: hãy hoàn thành cấp &e#required_level# &ctrước."
+    no_permission: "#prefix# &cBạn không có quyền cho cấp nâng cấp &e#level#&c."
+    no_provider: "#prefix# &cVault hoặc PlayerPoints không khả dụng nên không thể mua nâng cấp này."
+    no_money: "#prefix# &cBạn không đủ tiền hoặc điểm cho nâng cấp này."
     not_owner: "#prefix# &cChỉ chủ đảo mới nâng cấp được kho chung."
     disabled: "#prefix# &cNâng cấp kho đã bị tắt trên máy chủ này."
+    busy: "#prefix# &cĐang xử lý một lần nâng cấp khác, vui lòng đợi."
+    save_failed: "#prefix# &cKhông thể lưu nâng cấp. Bạn không bị trừ tiền (hoặc đã được hoàn tiền)."
+    no_items: "#prefix# &cBạn không có đủ vật phẩm để nâng cấp."
+    no_exp: "#prefix# &cBạn không có đủ kinh nghiệm để nâng cấp."
+    no_resources: "#prefix# &cBạn chưa đáp ứng đủ các yêu cầu nâng cấp."
+    payment_failed: "#prefix# &cThanh toán nâng cấp thất bại. Chưa có gì bị trừ."
+    bad_config: "#prefix# &cCấp nâng cấp này cấu hình sai. Hãy báo admin."
+    invalid: "#prefix# &cCấp nâng cấp này không tồn tại."
   filter:
     added: "#prefix# &aĐã thêm &e#item# &avào bộ lọc thu nhặt."
     removed: "#prefix# &eĐã xóa &f#item# &ekhỏi bộ lọc thu nhặt."
@@ -607,9 +617,118 @@ language:
   list_entry: "&8 - &e#language#"
   reloaded: "#prefix# &aĐã tải lại các file ngôn ngữ."
   per_player_disabled: "#prefix# &cMáy chủ này không cho người chơi tự chọn ngôn ngữ."
+upgrade:
+  command:
+    no-permission: "&cBạn không có quyền mở menu nâng cấp kho."
+    player-only: "&cLệnh này chỉ dành cho người chơi."
+    disabled: "&cHệ thống nâng cấp kho hiện đang tạm tắt."
+    usage: "&eSử dụng: /storage upgrade"
+  requirements:
+    title: "&6YÊU CẦU NÂNG CẤP"
+    mark-ok: "&a✔ "
+    mark-missing: "&c✘ "
+    vault: "&7Vault: &f#current#&8/&e#required#"
+    playerpoints: "&7PlayerPoints: &f#current#&8/&e#required#"
+    exp-levels: "&7EXP Level: &f#current#&8/&e#required#"
+    exp-points: "&7EXP Points: &f#current#&8/&e#required#"
+    item: "&7#item#: &f#current#&8/&e#required#"
+  items:
+    IRON_INGOT: "Thỏi sắt"
+    GOLD_INGOT: "Thỏi vàng"
+    DIAMOND: "Kim cương"
+    EMERALD: "Ngọc lục bảo"
+    NETHERITE_INGOT: "Thỏi netherite"
+    NETHERITE_BLOCK: "Khối netherite"
 common:
   nav_previous_prefix: "&7Trước: &e"
   nav_next_prefix: "&7Sau: &e"
+upgrade_gui:
+  title: "&0Nâng cấp kho"
+  back:
+    name: "&cQuay lại"
+    lore:
+    - "&7Trở về kho."
+  close:
+    name: "&cĐóng"
+    lore:
+    - "&7Đóng menu này."
+  name:
+    owned: "&a✔ KHO CẤP #level#"
+    max: "&6★ KHO CẤP #level# ★"
+    available: "&6✦ NÂNG CẤP KHO • CẤP #level#"
+    locked: "&c✘ KHO CẤP #level#"
+  lore:
+    available:
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&7Thông tin nâng cấp"
+    - ""
+    - "&7▪ Cấp hiện tại: &e#current_level#"
+    - "&7▪ Sức chứa hiện tại: &f#current_capacity#"
+    - "&7▪ Sức chứa mới: &a#new_capacity#"
+    - "&7▪ Tăng thêm: &a+#increase#"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&6YÊU CẦU NÂNG CẤP"
+    - ""
+    - "#requirements#"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "#status#"
+    - "#hint#"
+    owned:
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&7Sức chứa: &f#capacity# vật phẩm"
+    - "&7Trạng thái: &aĐã sở hữu"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&a✔ Bạn đã mở khóa cấp này."
+    locked:
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&7Sức chứa: &f#capacity#"
+    - "#requirements#"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&c✘ Cấp nâng cấp chưa mở khóa."
+    - "&7Yêu cầu hoàn thành cấp #required_level#."
+    max:
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&7Sức chứa: &a#capacity#"
+    - "&7Trạng thái: &6MAX LEVEL"
+    - ""
+    - "&8━━━━━━━━━━━━━━━━━━━━"
+    - "&e★ Bạn đã đạt cấp kho tối đa!"
+  status:
+    ready: "&a✔ Đã đáp ứng mọi yêu cầu!"
+    insufficient: "&c✘ Chưa đủ điều kiện nâng cấp!"
+    no_permission: "&c✘ Bạn không có quyền cho cấp này."
+    no_provider: "&c✘ Phương thức thanh toán (Vault/PlayerPoints) không khả dụng."
+    not_owner: "&c✘ Chỉ chủ đảo mới nâng cấp được."
+    disabled: "&c✘ Nâng cấp đang bị tắt."
+    bad_config: "&c✘ Cấp này cấu hình sai, hãy báo admin."
+  hint:
+    ready: "&e➤ Click để nâng cấp!"
+  confirm:
+    title: "&0Xác nhận nâng cấp"
+    confirm:
+      name: "&a&lXÁC NHẬN"
+      lore:
+      - "&7Trả các yêu cầu và mở khóa cấp &e#level#&7."
+    cancel:
+      name: "&c&lHỦY"
+      lore:
+      - "&7Quay lại mà không trả tiền."
+    info:
+      name: "&6✦ NÂNG LÊN CẤP #level#"
+      lore:
+      - ""
+      - "&8━━━━━━━━━━━━━━━━━━━━"
+      - "&7Sức chứa mới: &f#new_capacity#"
+      - ""
+      - "#requirements#"
 gui:
   confirmation:
     title: "&0Xác nhận thao tác"
@@ -1077,32 +1196,7 @@ gui:
         name: "&eTrang sau"
         lore:
         - "&7Trang #current_page#/#total_pages#"
-    upgrade:
-      title: "&0Nâng cấp kho"
-      info:
-        name: "&6Dung lượng kho"
-        lore:
-        - ""
-        - "&7Cấp: &e#level#&7/&e#max_level#"
-        - "&7Dung lượng: &e#capacity#"
-        - "&7Đã dùng: &e#used#"
-      upgrade:
-        name: "&aNâng cấp"
-        lore:
-        - ""
-        - "&7Cấp tiếp theo: &e#next_level#"
-        - "&7Dung lượng: &e#capacity# &7→ &a#next_capacity#"
-        - "&7Chi phí: &e#cost#"
-        - ""
-        - "#status#"
-        status_available: "&aBấm để nâng cấp"
-        status_max: "&cĐã đạt cấp tối đa"
-        status_owner: "&cChỉ chủ đảo mới nâng cấp được"
-        status_disabled: "&cNâng cấp đang bị tắt"
-      back:
-        name: "&cQuay lại"
-        lore:
-        - "&7Trở về kho."
+
   storage:
     title: "&8Kho đồ | #player#"
     items:

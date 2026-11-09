@@ -3,6 +3,7 @@ package net.danh.storage.Utils;
 import com.tchristofferson.configupdater.ConfigUpdater;
 import net.danh.storage.Manager.ConvertOreManager;
 import net.danh.storage.Manager.LanguageManager;
+import net.danh.storage.Manager.StorageUpgrade;
 import net.danh.storage.Manager.MineManager;
 import net.danh.storage.Manager.SpecialMaterial.SpecialMaterialManager;
 import net.danh.storage.Storage;
@@ -203,6 +204,10 @@ public class File {
         return getFileSetting().get("special_material.yml");
     }
 
+    public static FileConfiguration getUpgradesConfig() {
+        return getFileSetting().get("upgrades.yml");
+    }
+
     public static FileConfiguration getFriendStorageConfig() {
         return getFileSetting().get("friendstorage.yml");
     }
@@ -244,17 +249,76 @@ public class File {
         return getFileSetting().get("GUI/confirmation.yml");
     }
 
+    /**
+     * First run with upgrades.yml: carry the admin's old storage_upgrade levels from config.yml over, so their
+     * prices and capacities are not lost (old upgrades only had Vault prices).
+     */
+    private static void migrateLegacyUpgrades() {
+        java.io.File dataFolder = Storage.getStorage().getDataFolder();
+        java.io.File target = new java.io.File(dataFolder, "upgrades.yml");
+        java.io.File legacy = new java.io.File(dataFolder, "config.yml");
+        if (target.exists() || !legacy.isFile()) {
+            return;
+        }
+        YamlConfiguration old = YamlConfiguration.loadConfiguration(legacy);
+        org.bukkit.configuration.ConfigurationSection levels = old.getConfigurationSection("storage_upgrade.levels");
+        if (levels == null || levels.getKeys(false).isEmpty()) {
+            return;
+        }
+        try {
+            Storage.getStorage().saveResource("upgrades.yml", false);
+            YamlConfiguration upgrades = YamlConfiguration.loadConfiguration(target);
+            int migrated = 0;
+            for (String key : levels.getKeys(false)) {
+                int level;
+                try {
+                    level = Integer.parseInt(key);
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+                if (level < 1 || level > 6) {
+                    continue;
+                }
+                String path = "levels." + level + ".";
+                upgrades.set(path + "capacity", levels.getInt(key + ".capacity"));
+                // The bundled file already has "requirements"; replace all of it so only the old Vault cost applies.
+                upgrades.set(path + "requirements", null);
+                upgrades.set(path + "requirements.vault", levels.getDouble(key + ".cost"));
+                upgrades.set(path + "requirements.playerpoints", 0);
+                upgrades.set(path + "requirements.exp.type", "LEVELS");
+                upgrades.set(path + "requirements.exp.amount", 0);
+                upgrades.set(path + "requirements.items", new java.util.ArrayList<String>());
+                upgrades.set(path + "permission", levels.getString(key + ".permission", ""));
+                migrated = Math.max(migrated, level);
+            }
+            if (migrated > 0) {
+                upgrades.set("settings.enabled", old.getBoolean("storage_upgrade.enabled", true));
+                upgrades.save(target);
+                Storage.getStorage().getLogger().info("Migrated storage_upgrade from config.yml into upgrades.yml ("
+                        + migrated + " levels).");
+            }
+        } catch (IOException e) {
+            Storage.getStorage().getLogger().warning("Could not migrate storage_upgrade: " + e.getMessage());
+        }
+    }
+
+    public static void updateUpgradesConfig() {
+        updateVersionedConfig("upgrades.yml", "upgrades_version", "upgrades config");
+        StorageUpgrade.reload();
+    }
+
     public static void loadFiles() {
+        migrateLegacyUpgrades();
         getFileSetting().build("", false, "config.yml", "events.yml", "enchants.yml",
                 "special_material.yml", "crafting.yml",
-                "friendstorage.yml");
+                "friendstorage.yml", "upgrades.yml");
         copyExampleFiles();
         AutoPickupCache.reload();
     }
 
     public static void reloadFiles() {
         getFileSetting().reload("config.yml", "events.yml", "enchants.yml", "special_material.yml",
-                "crafting.yml", "friendstorage.yml", "GUI/storage.yml", "GUI/items.yml",
+                "crafting.yml", "friendstorage.yml", "upgrades.yml", "GUI/storage.yml", "GUI/items.yml",
                 "GUI/transfer.yml", "GUI/transfer-multi.yml", "GUI/convert-ore.yml", "GUI/view-storage.yml",
                 "GUI/recipe-list.yml", "GUI/recipe-editor.yml", "GUI/recipe-editor-list.yml",
                 "GUI/material-selection.yml", "GUI/material-editor.yml", "GUI/confirmation.yml", "GUI/storage-tools.yml");
@@ -263,6 +327,7 @@ public class File {
             MineManager.loadPlayerData(p);
         }
         LanguageManager.reload();
+        StorageUpgrade.reload();
         ConvertOreManager.loadConvertOptions();
         SpecialMaterialManager.loadSpecialMaterials();
         AutoPickupCache.reload();
